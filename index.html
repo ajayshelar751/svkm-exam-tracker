@@ -40,7 +40,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <!-- SheetJS (xlsx.full.min.js) Local Server copy with multiple CDN fallbacks -->
-  <script src="./xlsx.full.min.js"></script>
+  <script src="../xlsx.full.min.js"></script>
   <script>
     if (typeof XLSX === 'undefined') {
       console.warn('Local xlsx.full.min.js not loaded yet; attempting CDN fallbacks...');
@@ -81,6 +81,7 @@
 
   <!-- Supabase JS Client v2 (CDN browser loading) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabaseService.js"></script>
 
   <!-- React 18 & ReactDOM 18 CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -4001,6 +4002,65 @@ function Icon({ name, size = 16, className = "", strokeWidth = 2, onClick }) {
 class SupabaseService {
   static LOCAL_KEY = 'svkm_exam_portal_v1';
   static _supabaseClient = null;
+  static _sessionKeyToId = {};
+  static _sessionIdToKey = {};
+  static _activityLogMap = {};
+
+  // --- Session & Activity Relational Mapping Caches ---
+  static recordSessionMapping(sessionId, contextKey) {
+    if (sessionId && contextKey) {
+      this._sessionIdToKey[sessionId] = contextKey;
+      this._sessionKeyToId[contextKey] = sessionId;
+    }
+  }
+
+  static async resolveContextKey(client, sessionId) {
+    if (!sessionId) return null;
+    if (this._sessionIdToKey[sessionId]) {
+      return this._sessionIdToKey[sessionId];
+    }
+    if (!client) return null;
+    try {
+      const { data } = await client.from('exam_sessions')
+        .select('id, context_key')
+        .eq('id', sessionId)
+        .maybeSingle();
+      if (data?.context_key) {
+        this.recordSessionMapping(data.id, data.context_key);
+        return data.context_key;
+      }
+    } catch (e) {
+      console.warn("Failed to resolve session context key:", e);
+    }
+    return null;
+  }
+
+  static recordActivityLogMapping(actLogId, sessionId, activityId) {
+    if (actLogId) {
+      this._activityLogMap[actLogId] = { sessionId, activityId };
+    }
+  }
+
+  static async resolveActivityLog(client, actLogId) {
+    if (!actLogId) return null;
+    if (this._activityLogMap[actLogId]) {
+      return this._activityLogMap[actLogId];
+    }
+    if (!client) return null;
+    try {
+      const { data } = await client.from('activity_logs')
+        .select('id, session_id, activity_id')
+        .eq('id', actLogId)
+        .maybeSingle();
+      if (data) {
+        this.recordActivityLogMapping(data.id, data.session_id, data.activity_id);
+        return { sessionId: data.session_id, activityId: data.activity_id };
+      }
+    } catch (e) {
+      console.warn("Failed to resolve activity log:", e);
+    }
+    return null;
+  }
 
   // --- Local Storage Caching ---
   static getLocalData() {
@@ -4144,7 +4204,10 @@ class SupabaseService {
         .eq('context_key', contextKey)
         .maybeSingle();
 
-      if (existing) return existing.id;
+      if (existing) {
+        this.recordSessionMapping(existing.id, contextKey);
+        return existing.id;
+      }
 
       // 2. Lookup Master IDs
       const [colRes, yearRes, semRes, cycleRes] = await Promise.all([
@@ -4190,11 +4253,92 @@ class SupabaseService {
         .select('id')
         .single();
 
+      if (newSession?.id) {
+        this.recordSessionMapping(newSession.id, contextKey);
+      }
       return newSession?.id || null;
     } catch (err) {
       console.warn("Failed to ensure exam session:", err);
       return null;
     }
+  }
+
+  // --- Normalized Query Helpers for Users & Activities ---
+  static async fetchUsersFromDatabase(client) {
+    if (!client) return [];
+    try {
+      const { data: dbUsers, error: uErr } = await client.from('users').select(`
+        id, legacy_id, name, email, role_code, is_admin, is_active, must_change_password, password_hash,
+        user_college_assignments(college_id, is_all_colleges, colleges(code)),
+        user_program_assignments(college_id, program_id, is_all_programs, colleges(code), programs(name))
+      `);
+
+      if (!uErr && dbUsers && dbUsers.length > 0) {
+        return dbUsers.map(u => {
+          let assignedColleges = [];
+          const hasAllCols = u.user_college_assignments?.some(a => a.is_all_colleges);
+          if (hasAllCols) {
+            assignedColleges = ['ALL'];
+          } else {
+            assignedColleges = (u.user_college_assignments || []).map(a => a.colleges?.code).filter(Boolean);
+          }
+
+          const assignedPrograms = {};
+          (u.user_program_assignments || []).forEach(pa => {
+            const cCode = pa.colleges?.code;
+            if (cCode) {
+              if (!assignedPrograms[cCode]) assignedPrograms[cCode] = [];
+              if (pa.is_all_programs) {
+                assignedPrograms[cCode] = ['ALL'];
+              } else if (pa.programs?.name && !assignedPrograms[cCode].includes('ALL')) {
+                assignedPrograms[cCode].push(pa.programs.name);
+              }
+            }
+          });
+
+          return {
+            id: u.legacy_id || u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role_code,
+            isAdmin: !!u.is_admin,
+            active: !!u.is_active,
+            mustChangePassword: !!u.must_change_password,
+            password: u.password_hash || "Pass@123",
+            assignedColleges,
+            assignedPrograms
+          };
+        });
+      }
+    } catch (e) {
+      console.warn("Error fetching users from Supabase:", e);
+    }
+    return [];
+  }
+
+  static async fetchActivitiesFromDatabase(client) {
+    if (!client) return [];
+    try {
+      const { data: dbActs, error: aErr } = await client.from('activities_master')
+        .select('*')
+        .order('sr_no', { ascending: true });
+
+      if (!aErr && dbActs && dbActs.length > 0) {
+        return dbActs.map(a => ({
+          id: a.id,
+          srNo: a.sr_no,
+          name: a.name,
+          phase: a.phase,
+          performedBy: a.performed_by_role,
+          requiredVerifiers: a.required_verifiers || [],
+          cond: a.cond || 'ALL',
+          examScope: a.exam_scope || 'BOTH'
+        }));
+      }
+    } catch (e) {
+      console.warn("Error fetching activities from Supabase:", e);
+    }
+    return [];
   }
 
   // --- Full Relational Sync from Supabase ---
@@ -4257,48 +4401,9 @@ class SupabaseService {
 
       // 2. Users
       try {
-        const { data: dbUsers, error: uErr } = await client.from('users').select(`
-          id, legacy_id, name, email, role_code, is_admin, is_active, must_change_password, password_hash,
-          user_college_assignments(college_id, is_all_colleges, colleges(code)),
-          user_program_assignments(college_id, program_id, is_all_programs, colleges(code), programs(name))
-        `);
-
-        if (!uErr && dbUsers && dbUsers.length > 0) {
-          users = dbUsers.map(u => {
-            let assignedColleges = [];
-            const hasAllCols = u.user_college_assignments?.some(a => a.is_all_colleges);
-            if (hasAllCols) {
-              assignedColleges = ['ALL'];
-            } else {
-              assignedColleges = (u.user_college_assignments || []).map(a => a.colleges?.code).filter(Boolean);
-            }
-
-            const assignedPrograms = {};
-            (u.user_program_assignments || []).forEach(pa => {
-              const cCode = pa.colleges?.code;
-              if (cCode) {
-                if (!assignedPrograms[cCode]) assignedPrograms[cCode] = [];
-                if (pa.is_all_programs) {
-                  assignedPrograms[cCode] = ['ALL'];
-                } else if (pa.programs?.name && !assignedPrograms[cCode].includes('ALL')) {
-                  assignedPrograms[cCode].push(pa.programs.name);
-                }
-              }
-            });
-
-            return {
-              id: u.legacy_id || u.id,
-              name: u.name,
-              email: u.email,
-              role: u.role_code,
-              isAdmin: !!u.is_admin,
-              active: !!u.is_active,
-              mustChangePassword: !!u.must_change_password,
-              password: u.password_hash || "Pass@123",
-              assignedColleges,
-              assignedPrograms
-            };
-          });
+        const dbUsers = await this.fetchUsersFromDatabase(client);
+        if (dbUsers && dbUsers.length > 0) {
+          users = dbUsers;
         }
       } catch (uErr) {
         console.warn("Supabase users sync notice:", uErr);
@@ -4306,21 +4411,9 @@ class SupabaseService {
 
       // 3. Activities Master
       try {
-        const { data: dbActs, error: aErr } = await client.from('activities_master')
-          .select('*')
-          .order('sr_no', { ascending: true });
-
-        if (!aErr && dbActs && dbActs.length > 0) {
-          activities = dbActs.map(a => ({
-            id: a.id,
-            srNo: a.sr_no,
-            name: a.name,
-            phase: a.phase,
-            performedBy: a.performed_by_role,
-            requiredVerifiers: a.required_verifiers || [],
-            cond: a.cond || 'ALL',
-            examScope: a.exam_scope || 'BOTH'
-          }));
+        const dbActs = await this.fetchActivitiesFromDatabase(client);
+        if (dbActs && dbActs.length > 0) {
+          activities = dbActs;
         }
       } catch (aErr) {
         console.warn("Supabase activities sync notice:", aErr);
@@ -4343,6 +4436,7 @@ class SupabaseService {
           const nextContexts = {};
           dbSessions.forEach(sess => {
             const cKey = sess.context_key;
+            this.recordSessionMapping(sess.id, cKey);
             const dm = Array.isArray(sess.dashboard_metrics) ? sess.dashboard_metrics[0] : sess.dashboard_metrics;
             const headerMetrics = dm ? {
               batch: dm.batch_year,
@@ -4360,6 +4454,7 @@ class SupabaseService {
 
             const logs = {};
             (sess.activity_logs || []).forEach(al => {
+              this.recordActivityLogMapping(al.id, sess.id, al.activity_id);
               const verifs = {};
               (al.verification_logs || []).forEach(vl => {
                 if (!vl.is_revoked) {
@@ -4466,6 +4561,8 @@ class SupabaseService {
 
       if (lErr || !actLog) return;
       const actLogId = actLog.id;
+      this.recordSessionMapping(sessionId, contextKey);
+      this.recordActivityLogMapping(actLogId, sessionId, activityId);
 
       if (headerMetrics) {
         await this.saveHeaderMetricsToCloud(client, contextKey, headerMetrics);
@@ -4477,6 +4574,7 @@ class SupabaseService {
             await client.from('verification_logs').upsert({
               activity_log_id: actLogId,
               session_id: sessionId,
+              activity_id: activityId,
               role_code: role,
               verifier_name: vInfo.userName || 'Staff Verifier',
               verifier_email: vInfo.userEmail || '',
@@ -4645,39 +4743,478 @@ class SupabaseService {
     }
   }
 
-  // --- Realtime Subscriptions ---
+  // --- Realtime Subscriptions (Firebase onSnapshot Parity Engine) ---
   static listenToCloudUpdates(client, callbacks = {}) {
     if (!client || !client.channel) return () => {};
+
     try {
-      const channel = client.channel('svkm-exam-portal-realtime-' + Math.random().toString(36).slice(2, 7))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'activity_logs' }, payload => {
-          if (callbacks.onContextsUpdate) callbacks.onContextsUpdate(null, payload);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'verification_logs' }, payload => {
-          if (callbacks.onContextsUpdate) callbacks.onContextsUpdate(null, payload);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'query_logs' }, payload => {
-          if (callbacks.onContextsUpdate) callbacks.onContextsUpdate(null, payload);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'dashboard_metrics' }, payload => {
-          if (callbacks.onContextsUpdate) callbacks.onContextsUpdate(null, payload);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, async () => {
+      let pendingContextPatches = [];
+      let flushTimeout = null;
+
+      // Micro-batch debounce: merges rapid burst events into an atomic functional React update
+      const scheduleContextFlush = () => {
+        if (flushTimeout) return;
+        flushTimeout = setTimeout(() => {
+          flushTimeout = null;
+          if (pendingContextPatches.length === 0) return;
+          const patches = [...pendingContextPatches];
+          pendingContextPatches = [];
+
+          if (callbacks.onContextsUpdate) {
+            callbacks.onContextsUpdate((prevContexts) => {
+              let next = { ...prevContexts };
+              for (const patch of patches) {
+                try {
+                  next = patch(next);
+                } catch (err) {
+                  console.warn("Error applying realtime context patch:", err);
+                }
+              }
+              return next;
+            });
+          }
+        }, 20); // 20ms micro-debounce batches bursts into a single render
+      };
+
+      const queueContextPatch = (patchFn) => {
+        pendingContextPatches.push(patchFn);
+        scheduleContextFlush();
+      };
+
+      // Debounce helpers for administrative master table updates
+      let usersTimeout = null;
+      const scheduleUsersUpdate = () => {
+        if (usersTimeout) clearTimeout(usersTimeout);
+        usersTimeout = setTimeout(async () => {
           if (callbacks.onUsersUpdate) {
-            const res = await client.from('users').select('*');
-            if (!res.error && res.data) callbacks.onUsersUpdate(res.data);
+            const users = await SupabaseService.fetchUsersFromDatabase(client);
+            if (users && users.length > 0) callbacks.onUsersUpdate(users);
           }
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'activities_master' }, async () => {
+        }, 60);
+      };
+
+      let activitiesTimeout = null;
+      const scheduleActivitiesUpdate = () => {
+        if (activitiesTimeout) clearTimeout(activitiesTimeout);
+        activitiesTimeout = setTimeout(async () => {
           if (callbacks.onActivitiesUpdate) {
-            const res = await client.from('activities_master').select('*').order('sr_no');
-            if (!res.error && res.data) callbacks.onActivitiesUpdate(res.data);
+            const acts = await SupabaseService.fetchActivitiesFromDatabase(client);
+            if (acts && acts.length > 0) callbacks.onActivitiesUpdate(acts);
+          }
+        }, 60);
+      };
+
+      // Single consolidated WebSocket channel across all replicated tables
+      const channelName = 'svkm-realtime-' + Math.random().toString(36).slice(2, 9);
+      const channel = client.channel(channelName)
+        // 1. Activity Logs (Completion, Remarks, NA)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'activity_logs' }, async (payload) => {
+          try {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const row = payload.new;
+              if (!row || !row.session_id || !row.activity_id) return;
+              SupabaseService.recordActivityLogMapping(row.id, row.session_id, row.activity_id);
+              const contextKey = await SupabaseService.resolveContextKey(client, row.session_id);
+              if (!contextKey) return;
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey] || { headerMetrics: {}, logs: {} };
+                const prevLogs = ctx.logs || {};
+                const prevLog = prevLogs[row.activity_id] || {};
+
+                const updatedLog = {
+                  ...prevLog,
+                  performedDate: row.performed_date || null,
+                  performedByUser: row.performed_by_name ? {
+                    name: row.performed_by_name,
+                    email: row.performed_by_email,
+                    timestamp: row.performed_at
+                  } : null,
+                  isNA: !!row.is_na,
+                  remarks: row.remarks || null,
+                  verifications: prevLog.verifications || {},
+                  queryDetails: prevLog.queryDetails || null,
+                  history: prevLog.history || []
+                };
+
+                return {
+                  ...contexts,
+                  [contextKey]: {
+                    ...ctx,
+                    logs: {
+                      ...prevLogs,
+                      [row.activity_id]: updatedLog
+                    }
+                  }
+                };
+              });
+            } else if (payload.eventType === 'DELETE') {
+              const row = payload.old;
+              if (!row) return;
+              const sessionId = row.session_id || (await SupabaseService.resolveActivityLog(client, row.id))?.sessionId;
+              const activityId = row.activity_id || (await SupabaseService.resolveActivityLog(client, row.id))?.activityId;
+              if (!sessionId || !activityId) return;
+              const contextKey = await SupabaseService.resolveContextKey(client, sessionId);
+              if (!contextKey) return;
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey];
+                if (!ctx || !ctx.logs || !ctx.logs[activityId]) return contexts;
+                const nextLogs = { ...ctx.logs };
+                delete nextLogs[activityId];
+                return {
+                  ...contexts,
+                  [contextKey]: { ...ctx, logs: nextLogs }
+                };
+              });
+            }
+          } catch (e) {
+            console.warn("Realtime activity_logs handling error:", e);
           }
         })
-        .subscribe();
+
+        // 2. Verification Logs (Multi-tier sign-off & revocations)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'verification_logs' }, async (payload) => {
+          try {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const row = payload.new;
+              if (!row || !row.session_id || !row.role_code) return;
+              
+              let activityId = row.activity_id;
+              if (!activityId && row.activity_log_id) {
+                const resolved = await SupabaseService.resolveActivityLog(client, row.activity_log_id);
+                activityId = resolved?.activityId;
+              }
+              if (!activityId) return;
+
+              const contextKey = await SupabaseService.resolveContextKey(client, row.session_id);
+              if (!contextKey) return;
+
+              const isVerified = !!row.is_verified && !row.is_revoked;
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey] || { headerMetrics: {}, logs: {} };
+                const prevLogs = ctx.logs || {};
+                const prevLog = prevLogs[activityId] || {};
+                const prevVerifs = { ...(prevLog.verifications || {}) };
+
+                if (isVerified) {
+                  prevVerifs[row.role_code] = {
+                    verified: true,
+                    date: row.verification_date,
+                    userName: row.verifier_name,
+                    userEmail: row.verifier_email,
+                    systemTimestamp: row.verified_at
+                  };
+                } else {
+                  delete prevVerifs[row.role_code];
+                }
+
+                return {
+                  ...contexts,
+                  [contextKey]: {
+                    ...ctx,
+                    logs: {
+                      ...prevLogs,
+                      [activityId]: {
+                        ...prevLog,
+                        verifications: prevVerifs
+                      }
+                    }
+                  }
+                };
+              });
+            } else if (payload.eventType === 'DELETE') {
+              const row = payload.old;
+              if (!row || !row.role_code) return;
+              let activityId = row.activity_id;
+              let sessionId = row.session_id;
+              if ((!activityId || !sessionId) && row.activity_log_id) {
+                const resolved = await SupabaseService.resolveActivityLog(client, row.activity_log_id);
+                activityId = activityId || resolved?.activityId;
+                sessionId = sessionId || resolved?.sessionId;
+              }
+              if (!activityId || !sessionId) return;
+              const contextKey = await SupabaseService.resolveContextKey(client, sessionId);
+              if (!contextKey) return;
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey];
+                if (!ctx || !ctx.logs || !ctx.logs[activityId]) return contexts;
+                const prevLogs = ctx.logs;
+                const prevLog = prevLogs[activityId];
+                const prevVerifs = { ...(prevLog.verifications || {}) };
+                delete prevVerifs[row.role_code];
+
+                return {
+                  ...contexts,
+                  [contextKey]: {
+                    ...ctx,
+                    logs: {
+                      ...prevLogs,
+                      [activityId]: {
+                        ...prevLog,
+                        verifications: prevVerifs
+                      }
+                    }
+                  }
+                };
+              });
+            }
+          } catch (e) {
+            console.warn("Realtime verification_logs handling error:", e);
+          }
+        })
+
+        // 3. Query Logs (Discrepancy flagging and resolution)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'query_logs' }, async (payload) => {
+          try {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const row = payload.new;
+              if (!row || !row.session_id || !row.activity_id) return;
+              const contextKey = await SupabaseService.resolveContextKey(client, row.session_id);
+              if (!contextKey) return;
+
+              const queryDetails = {
+                raisedBy: row.raised_by_name || '',
+                role: row.raised_by_role || '',
+                email: row.raised_by_email || '',
+                reason: row.reason || '',
+                timestamp: row.raised_at || new Date().toISOString(),
+                resolved: !!row.is_resolved,
+                resolvedBy: row.resolved_by_name || null,
+                resolutionNotes: row.resolution_notes || null,
+                resolvedAt: row.resolved_at || null
+              };
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey] || { headerMetrics: {}, logs: {} };
+                const prevLogs = ctx.logs || {};
+                const prevLog = prevLogs[row.activity_id] || {};
+
+                return {
+                  ...contexts,
+                  [contextKey]: {
+                    ...ctx,
+                    logs: {
+                      ...prevLogs,
+                      [row.activity_id]: {
+                        ...prevLog,
+                        queryDetails
+                      }
+                    }
+                  }
+                };
+              });
+            } else if (payload.eventType === 'DELETE') {
+              const row = payload.old;
+              if (!row || !row.session_id || !row.activity_id) return;
+              const contextKey = await SupabaseService.resolveContextKey(client, row.session_id);
+              if (!contextKey) return;
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey];
+                if (!ctx || !ctx.logs || !ctx.logs[row.activity_id]) return contexts;
+                return {
+                  ...contexts,
+                  [contextKey]: {
+                    ...ctx,
+                    logs: {
+                      ...ctx.logs,
+                      [row.activity_id]: {
+                        ...ctx.logs[row.activity_id],
+                        queryDetails: null
+                      }
+                    }
+                  }
+                };
+              });
+            }
+          } catch (e) {
+            console.warn("Realtime query_logs handling error:", e);
+          }
+        })
+
+        // 4. Dashboard Metrics (Session Header Counts & Exam Month/Year)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'dashboard_metrics' }, async (payload) => {
+          try {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const row = payload.new;
+              if (!row || !row.session_id) return;
+              const contextKey = await SupabaseService.resolveContextKey(client, row.session_id);
+              if (!contextKey) return;
+
+              const headerMetrics = {
+                batch: row.batch_year || '',
+                totalStudents: row.total_students || 0,
+                pwdStudents: row.pwd_students || 0,
+                debarredStudents: row.debarred_students || 0,
+                ufmCases: row.ufm_cases || 0,
+                numModules: row.num_modules || 0,
+                regBatchStudents: row.reg_batch_students || 0,
+                prevBatchStudents: row.prev_batch_students || 0,
+                appearingBatches: row.appearing_batches || '',
+                numPrograms: row.num_programs || 1,
+                examMonthYear: row.exam_month_year || ''
+              };
+
+              queueContextPatch((contexts) => {
+                const ctx = contexts[contextKey] || { headerMetrics: {}, logs: {} };
+                return {
+                  ...contexts,
+                  [contextKey]: {
+                    ...ctx,
+                    headerMetrics: {
+                      ...(ctx.headerMetrics || {}),
+                      ...headerMetrics
+                    }
+                  }
+                };
+              });
+            }
+          } catch (e) {
+            console.warn("Realtime dashboard_metrics handling error:", e);
+          }
+        })
+
+        // 5. Audit History (Forensic Activity History Append)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_history' }, async (payload) => {
+          try {
+            const row = payload.new;
+            if (!row || !row.session_id || !row.activity_id) return;
+            const contextKey = await SupabaseService.resolveContextKey(client, row.session_id);
+            if (!contextKey) return;
+
+            const entry = {
+              id: row.legacy_id || row.id || String(Date.now()),
+              action: row.action,
+              role: row.role_code,
+              userName: row.user_name,
+              userEmail: row.user_email,
+              dateValue: row.date_value,
+              details: row.details,
+              timestamp: row.timestamp || new Date().toISOString()
+            };
+
+            queueContextPatch((contexts) => {
+              const ctx = contexts[contextKey] || { headerMetrics: {}, logs: {} };
+              const prevLogs = ctx.logs || {};
+              const prevLog = prevLogs[row.activity_id] || {};
+              const curHistory = prevLog.history || [];
+
+              // Idempotent check: skip if identical entry already exists
+              const exists = curHistory.some(h => (h.id && h.id === entry.id) || (h.timestamp === entry.timestamp && h.action === entry.action));
+              if (exists) return contexts;
+
+              return {
+                ...contexts,
+                [contextKey]: {
+                  ...ctx,
+                  logs: {
+                    ...prevLogs,
+                    [row.activity_id]: {
+                      ...prevLog,
+                      history: [...curHistory, entry]
+                    }
+                  }
+                }
+              };
+            });
+          } catch (e) {
+            console.warn("Realtime audit_history handling error:", e);
+          }
+        })
+
+        // 6. Exam Sessions (New context creation, month/year maintenance, deletion)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_sessions' }, async (payload) => {
+          try {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const row = payload.new;
+              if (!row || !row.context_key) return;
+              SupabaseService.recordSessionMapping(row.id, row.context_key);
+
+              queueContextPatch((contexts) => {
+                if (contexts[row.context_key]) {
+                  if (row.exam_month_year) {
+                    const cur = contexts[row.context_key];
+                    return {
+                      ...contexts,
+                      [row.context_key]: {
+                        ...cur,
+                        headerMetrics: {
+                          ...(cur.headerMetrics || {}),
+                          examMonthYear: row.exam_month_year
+                        }
+                      }
+                    };
+                  }
+                  return contexts;
+                }
+                return {
+                  ...contexts,
+                  [row.context_key]: { headerMetrics: { examMonthYear: row.exam_month_year || '' }, logs: {} }
+                };
+              });
+            } else if (payload.eventType === 'DELETE') {
+              const row = payload.old;
+              const cKey = row?.context_key || (row?.id && SupabaseService._sessionIdToKey[row.id]);
+              if (!cKey) return;
+
+              queueContextPatch((contexts) => {
+                if (!contexts[cKey]) return contexts;
+                const next = { ...contexts };
+                delete next[cKey];
+                return next;
+              });
+            }
+          } catch (e) {
+            console.warn("Realtime exam_sessions handling error:", e);
+          }
+        })
+
+        // 7. Users (Staff Account Provisioning & Role Assignments)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+          scheduleUsersUpdate();
+        })
+
+        // 8. Activities Master (Catalog Changes)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'activities_master' }, () => {
+          scheduleActivitiesUpdate();
+        })
+
+        // 9. System Config (Portal Settings & Batches)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'system_config' }, (payload) => {
+          try {
+            const row = payload.new;
+            if (row && row.config_key === 'portal_settings' && row.config_value) {
+              if (callbacks.onConfigUpdate) {
+                callbacks.onConfigUpdate(row.config_value);
+              }
+            }
+          } catch (e) {
+            console.warn("Realtime system_config handling error:", e);
+          }
+        })
+
+        // Realtime WebSocket Channel Status Handler
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            if (callbacks.onStatusChange) callbacks.onStatusChange('CONNECTED');
+          } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+            console.warn("Supabase Realtime subscription status alert:", status, err);
+            if (callbacks.onStatusChange) callbacks.onStatusChange('LOCAL_FALLBACK');
+          } else if (status === 'CLOSED') {
+            if (callbacks.onStatusChange) callbacks.onStatusChange('DISCONNECTED');
+          }
+        });
 
       return () => {
-        try { client.removeChannel(channel); } catch (e) {}
+        if (flushTimeout) clearTimeout(flushTimeout);
+        if (usersTimeout) clearTimeout(usersTimeout);
+        if (activitiesTimeout) clearTimeout(activitiesTimeout);
+        try {
+          client.removeChannel(channel);
+        } catch (e) {}
       };
     } catch (err) {
       console.warn("Error attaching Supabase Realtime listeners:", err);
@@ -11279,8 +11816,11 @@ function App() {
         setCloudStatus("LOCAL_FALLBACK");
       }
 
-      // Real-time Firestore onSnapshot listeners
+      // Real-time Supabase onSnapshot listeners
       unsubscribeSnapshots = SupabaseService.listenToCloudUpdates(sb.client, {
+        onStatusChange: (status) => {
+          if (status) setCloudStatus(status);
+        },
         onConfigUpdate: (cfg) => {
           if (cfg) {
             const cln = { ...cfg, examCycles: normalizeExamCycles(cfg.examCycles) };
@@ -11318,17 +11858,23 @@ function App() {
             StorageService.saveLocalData({ ...cur, activities: actList });
           }
         },
-        onContextsUpdate: (ctxMap) => {
-          if (ctxMap) {
-            setContexts(prev => {
-              const merged = { ...prev, ...ctxMap };
+        onContextsUpdate: (patchOrFn) => {
+          if (!patchOrFn) return;
+          setContexts(prev => {
+            let next;
+            if (typeof patchOrFn === 'function') {
+              next = patchOrFn(prev);
+            } else {
+              next = { ...prev, ...patchOrFn };
+            }
+            if (next && next !== prev) {
               const cur = StorageService.getLocalData() || {};
-              StorageService.saveLocalData({ ...cur, contexts: merged });
-              return merged;
-            });
-            setCloudStatus("CONNECTED");
-            setLastSyncTime(new Date());
-          }
+              StorageService.saveLocalData({ ...cur, contexts: next });
+            }
+            return next;
+          });
+          setCloudStatus("CONNECTED");
+          setLastSyncTime(new Date());
         }
       });
     });

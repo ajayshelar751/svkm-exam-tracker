@@ -394,6 +394,7 @@ CREATE TABLE IF NOT EXISTS verification_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     activity_log_id UUID NOT NULL REFERENCES activity_logs(id) ON DELETE CASCADE,
     session_id UUID NOT NULL REFERENCES exam_sessions(id) ON DELETE CASCADE,
+    activity_id VARCHAR(50) REFERENCES activities_master(id) ON DELETE SET NULL,
     role_code VARCHAR(50) NOT NULL REFERENCES roles(code) ON UPDATE CASCADE,
     verifier_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     verifier_name VARCHAR(255) NOT NULL,
@@ -411,6 +412,7 @@ CREATE TABLE IF NOT EXISTS verification_logs (
 
 CREATE INDEX IF NOT EXISTS idx_verif_act_log ON verification_logs(activity_log_id);
 CREATE INDEX IF NOT EXISTS idx_verif_session ON verification_logs(session_id);
+CREATE INDEX IF NOT EXISTS idx_verif_act_id ON verification_logs(activity_id);
 CREATE INDEX IF NOT EXISTS idx_verif_role ON verification_logs(role_code);
 CREATE INDEX IF NOT EXISTS idx_verif_status ON verification_logs(is_verified, is_revoked);
 
@@ -434,7 +436,8 @@ CREATE TABLE IF NOT EXISTS query_logs (
     resolution_notes TEXT,
     resolved_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_query_activity_log UNIQUE (activity_log_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_query_act_log ON query_logs(activity_log_id);
@@ -908,10 +911,29 @@ BEFORE INSERT OR UPDATE ON activity_logs
 FOR EACH ROW EXECUTE FUNCTION sync_activity_log_status();
 
 -- ======================================================================================
--- 24. SUPABASE REALTIME REPLICATION SETUP
--- Enables instant WebSocket broadcasts to frontend clients
+-- 24. SUPABASE REALTIME REPLICATION & REPLICA IDENTITY SETUP
+-- Enables instant WebSocket broadcasts to frontend clients with full RLS evaluation
 -- ======================================================================================
+ALTER TABLE activity_logs REPLICA IDENTITY FULL;
+ALTER TABLE verification_logs REPLICA IDENTITY FULL;
+ALTER TABLE query_logs REPLICA IDENTITY FULL;
+ALTER TABLE dashboard_metrics REPLICA IDENTITY FULL;
+ALTER TABLE exam_sessions REPLICA IDENTITY FULL;
+ALTER TABLE audit_history REPLICA IDENTITY FULL;
+ALTER TABLE users REPLICA IDENTITY FULL;
+ALTER TABLE activities_master REPLICA IDENTITY FULL;
+ALTER TABLE system_config REPLICA IDENTITY FULL;
+ALTER TABLE colleges REPLICA IDENTITY FULL;
+ALTER TABLE programs REPLICA IDENTITY FULL;
+ALTER TABLE academic_years REPLICA IDENTITY FULL;
+ALTER TABLE semesters REPLICA IDENTITY FULL;
+ALTER TABLE exam_cycles REPLICA IDENTITY FULL;
+
 DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        CREATE PUBLICATION supabase_realtime;
+    END IF;
+
     ALTER PUBLICATION supabase_realtime ADD TABLE activity_logs;
     ALTER PUBLICATION supabase_realtime ADD TABLE verification_logs;
     ALTER PUBLICATION supabase_realtime ADD TABLE query_logs;

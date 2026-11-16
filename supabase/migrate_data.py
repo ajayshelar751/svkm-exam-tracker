@@ -264,11 +264,12 @@ ON CONFLICT (id) DO UPDATE SET
                 v_is_ver = sql_bool(v_info.get('verified', True))
 
                 lines.append(f"""INSERT INTO verification_logs (
-    activity_log_id, session_id, role_code, verifier_user_id, verifier_name,
+    activity_log_id, session_id, activity_id, role_code, verifier_user_id, verifier_name,
     verifier_email, verification_date, verified_at, is_verified
 ) VALUES (
     (SELECT id FROM activity_logs WHERE session_id = (SELECT id FROM exam_sessions WHERE context_key = {sql_str(ctx_key)}) AND activity_id = {sql_str(act_id)}),
     (SELECT id FROM exam_sessions WHERE context_key = {sql_str(ctx_key)}),
+    {sql_str(act_id)},
     {sql_str(v_role)},
     (SELECT id FROM users WHERE email = {v_email}),
     {v_name},
@@ -277,6 +278,7 @@ ON CONFLICT (id) DO UPDATE SET
     {v_at},
     {v_is_ver}
 ) ON CONFLICT (activity_log_id, role_code) DO UPDATE SET
+    activity_id = EXCLUDED.activity_id,
     verification_date = EXCLUDED.verification_date,
     verified_at = EXCLUDED.verified_at,
     is_verified = EXCLUDED.is_verified,

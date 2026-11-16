@@ -3711,4 +3711,10 @@ INSERT INTO audit_history (
     '2026-11-15T11:29:24.509Z'
 );
 
+-- Backfill verification_logs.activity_id from activity_logs for instant $O(1)$ realtime resolution
+UPDATE verification_logs vl
+SET activity_id = al.activity_id
+FROM activity_logs al
+WHERE vl.activity_log_id = al.id AND vl.activity_id IS NULL;
+
 COMMIT;

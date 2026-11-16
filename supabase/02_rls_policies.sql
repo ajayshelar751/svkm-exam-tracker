@@ -294,3 +294,17 @@ ON notifications FOR UPDATE USING (
     recipient_user_id = (get_current_portal_user()).id 
     OR is_portal_admin()
 );
+
+-- ======================================================================================
+-- 7. REPLICATION IDENTITY & PUBLICATION VERIFICATION FOR REALTIME
+-- ======================================================================================
+ALTER TABLE activity_logs REPLICA IDENTITY FULL;
+ALTER TABLE verification_logs REPLICA IDENTITY FULL;
+ALTER TABLE query_logs REPLICA IDENTITY FULL;
+ALTER TABLE dashboard_metrics REPLICA IDENTITY FULL;
+ALTER TABLE exam_sessions REPLICA IDENTITY FULL;
+ALTER TABLE audit_history REPLICA IDENTITY FULL;
+ALTER TABLE users REPLICA IDENTITY FULL;
+ALTER TABLE activities_master REPLICA IDENTITY FULL;
+ALTER TABLE system_config REPLICA IDENTITY FULL;
+
