@@ -1,0 +1,4103 @@
+{
+  "config": {
+    "batches": [
+      "2024-25",
+      "2025-26",
+      "2026-27"
+    ],
+    "examCycles": [
+      "Regular",
+      "Re-Exam"
+    ],
+    "colleges": [
+      {
+        "name": "Narsee Monjee College",
+        "code": "NMC",
+        "id": "NMC"
+      },
+      {
+        "id": "UPG",
+        "name": "Usha Pravin Gandhi College",
+        "code": "UPG"
+      },
+      {
+        "code": "MBC",
+        "name": "Mithibai College",
+        "id": "MBC"
+      },
+      {
+        "id": "DJSCE",
+        "name": "D.J. Sanghvi College",
+        "code": "DJSCE"
+      }
+    ],
+    "programs": {
+      "MITHIBAI": [
+        "B.A.",
+        "B.Sc.",
+        "B.Com",
+        "BMS",
+        "BAF",
+        "BAMMC",
+        "B.Sc. Comp Sci",
+        "B.Sc. Biotech",
+        "M.Sc.",
+        "M.A.",
+        "M.Com"
+      ],
+      "DJSCE": [
+        "B.Tech Computer",
+        "B.Tech IT",
+        "B.Tech EXTC",
+        "B.Tech AI & DS",
+        "B.Tech Mechanical",
+        "M.Tech"
+      ],
+      "MBC": [
+        "B.A.",
+        "B.Sc.",
+        "B.Com",
+        "BMS",
+        "BAF",
+        "BAMMC",
+        "B.Sc. Comp Sci",
+        "B.Sc. Biotech",
+        "M.Sc.",
+        "M.A.",
+        "M.Com"
+      ],
+      "NMC": [
+        "45611 - B.Com.",
+        "45612 - B.Com.(FM)",
+        "45613 - B.Com.(A&F)",
+        "45614 - B.M.S.",
+        "45615 - B.Com.(M&F)",
+        "45616 - B.Com.(Eco)",
+        "45617 - B.Com.(Eco&Ana)",
+        "45618 - B.Sc.(IT)",
+        "45619 - B.Sc.(AI&DA)",
+        "45620 - B.Com.(MS)",
+        "45621 - B.Com.(C&M)",
+        "45701 - M.Com.(AA)",
+        "45702 - M.Com.(B&F)",
+        "45703 - M.Com.(BM)"
+      ],
+      "UPG": [
+        "53011 - B.A.(MMC)",
+        "53013 - B.Sc.(IT)",
+        "53014 - B.A.(FT&NMP)",
+        "53015 - B.Com.(MS)",
+        "53016 - B.Sc.(AI&DS)",
+        "53012 - B.M.S.",
+        "53021 - M.Sc.(IT)",
+        "53022 - M.A.(EMA)",
+        "53024 - M.A.(MC-FTNM)",
+        "53026 - M.Sc.(AI&DS)",
+        "53023 - M.Com.(BM)"
+      ],
+      "NM": [
+        "B.Com",
+        "B.Com (Hons)",
+        "BMS",
+        "BAF",
+        "BFM",
+        "B.Sc. Finance",
+        "B.Sc. Economics",
+        "M.Com",
+        "Bachelor of Commerce (Commerce & Management)"
+      ]
+    },
+    "semesters": [
+      "Sem I",
+      "Sem II",
+      "Sem III",
+      "Sem IV",
+      "Sem V",
+      "Sem VI",
+      "Sem VII",
+      "Sem VIII"
+    ],
+    "currentBatch": "2026-27",
+    "hideDemoLogins": true
+  },
+  "users": [
+    {
+      "role": "COORD",
+      "active": true,
+      "assignedPrograms": {
+        "NM": [
+          "ALL"
+        ],
+        "NMC": [
+          "ALL"
+        ],
+        "UPG": [
+          "ALL"
+        ]
+      },
+      "mustChangePassword": false,
+      "isAdmin": false,
+      "password": "Pass@123",
+      "email": "atul.parkar@svkm.ac.in",
+      "name": "Atul Parkar",
+      "id": "user_1794628291050",
+      "assignedColleges": [
+        "NMC",
+        "UPG"
+      ]
+    },
+    {
+      "password": "sha256:b6bc7b58510319a151d168ba3d5aecb3ac0a9708d06dd930f37fbc89b6cdc697",
+      "assignedColleges": [
+        "NM",
+        "UPG"
+      ],
+      "id": "user_1794719411364",
+      "role": "ASST",
+      "mustChangePassword": false,
+      "email": "pratiksha.mishra@svkm.ac.in",
+      "active": true,
+      "assignedPrograms": {
+        "NM": [],
+        "UPG": [
+          "53011 - B.A.(MMC)",
+          "53013 - B.Sc.(IT)",
+          "53014 - B.A.(FT&NMP)",
+          "53015 - B.Com.(MS)",
+          "53016 - B.Sc.(AI&DS)",
+          "53012 - B.M.S."
+        ]
+      },
+      "name": "Pratiksha Mishra",
+      "isAdmin": false
+    },
+    {
+      "role": "ASST",
+      "active": true,
+      "password": "sha256:b6bc7b58510319a151d168ba3d5aecb3ac0a9708d06dd930f37fbc89b6cdc697",
+      "assignedColleges": [
+        "NM",
+        "UPG"
+      ],
+      "id": "user_1794719593717",
+      "assignedPrograms": {
+        "NM": [],
+        "UPG": [
+          "53022 - M.A.(EMA)",
+          "53024 - M.A.(MC-FTNM)",
+          "53026 - M.Sc.(AI&DS)",
+          "53023 - M.Com.(BM)",
+          "53021 - M.Sc.(IT)"
+        ]
+      },
+      "name": "Kirti Kelkar",
+      "email": "kirti.kelkar@svkm.ac.in",
+      "mustChangePassword": false,
+      "isAdmin": false
+    },
+    {
+      "name": "Anushka Ikke",
+      "active": true,
+      "assignedPrograms": {
+        "NM": [],
+        "NMC": [
+          "45612 - B.Com.(FM)",
+          "45613 - B.Com.(A&F)",
+          "45614 - B.M.S.",
+          "45615 - B.Com.(M&F)",
+          "45617 - B.Com.(Eco&Ana)",
+          "45618 - B.Sc.(IT)",
+          "45619 - B.Sc.(AI&DA)",
+          "45620 - B.Com.(MS)"
+        ]
+      },
+      "email": "anushka.ikke@svkm.ac.in",
+      "isAdmin": false,
+      "role": "ASST",
+      "assignedColleges": [
+        "NM",
+        "NMC"
+      ],
+      "mustChangePassword": false,
+      "id": "user_1794720356625",
+      "password": "sha256:b6bc7b58510319a151d168ba3d5aecb3ac0a9708d06dd930f37fbc89b6cdc697"
+    },
+    {
+      "isAdmin": true,
+      "assignedColleges": [
+        "UPG",
+        "NMC"
+      ],
+      "email": "ajay.shelar@svkm.ac.in",
+      "active": true,
+      "mustChangePassword": false,
+      "password": "Krishna75",
+      "name": "Ajay Shelar",
+      "assignedPrograms": {
+        "UPG": [
+          "ALL"
+        ],
+        "NMC": [
+          "ALL"
+        ],
+        "NM": [
+          "ALL"
+        ]
+      },
+      "role": "AR",
+      "id": "user_ajay"
+    },
+    {
+      "email": "alka.shukla@svkm.ac.in",
+      "role": "COE",
+      "assignedPrograms": {
+        "ALL": [
+          "ALL"
+        ]
+      },
+      "assignedColleges": [
+        "ALL"
+      ],
+      "mustChangePassword": true,
+      "id": "user_alka",
+      "isAdmin": false,
+      "name": "Alka Shukla",
+      "active": true,
+      "password": "Pass@123"
+    },
+    {
+      "password": "Pass@123",
+      "assignedPrograms": {
+        "NMC": [
+          "B.Com",
+          "BAF"
+        ],
+        "NM": [
+          "B.Com",
+          "BAF"
+        ]
+      },
+      "isAdmin": false,
+      "role": "ASST_COORD",
+      "id": "user_priya",
+      "email": "jaykumar.birhade@svkm.ac.in",
+      "active": true,
+      "mustChangePassword": true,
+      "assignedColleges": [
+        "NMC"
+      ],
+      "name": "Jaykumar Birhade"
+    },
+    {
+      "assignedPrograms": {
+        "NM": [
+          "B.Com",
+          "BAF",
+          "BMS"
+        ],
+        "NMC": [
+          "B.Com",
+          "BAF",
+          "BMS",
+          "45702 - M.Com.(B&F)",
+          "45703 - M.Com.(BM)",
+          "45701 - M.Com.(AA)",
+          "45611 - B.Com.",
+          "45616 - B.Com.(Eco)",
+          "45621 - B.Com.(C&M)"
+        ]
+      },
+      "name": "Sayli Bhole",
+      "active": true,
+      "id": "user_rahul",
+      "role": "ASST_COORD",
+      "password": "Pass@123",
+      "assignedColleges": [
+        "NMC"
+      ],
+      "email": "sayli.bhole@svkm.ac.in",
+      "isAdmin": false,
+      "mustChangePassword": false
+    },
+    {
+      "role": "DY_COE",
+      "assignedColleges": [
+        "ALL"
+      ],
+      "id": "user_rupesh",
+      "isAdmin": false,
+      "mustChangePassword": true,
+      "name": "Dr. Rupesh Mundada",
+      "assignedPrograms": {
+        "ALL": [
+          "ALL"
+        ]
+      },
+      "active": true,
+      "password": "Pass@123",
+      "email": "rupesh.mundada@svkm.ac.in"
+    }
+  ],
+  "activities": [
+    {
+      "id": "act_8",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "performedBy": "COORD",
+      "name": "Maintain PI Table (in January Month) [ZMU_PI]",
+      "examScope": "REGULAR_ONLY",
+      "srNo": 1
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "AR",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_9",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 2,
+      "name": "Received Academic Calendar from College"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_10",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 3,
+      "name": "Received Course Structure from College"
+    },
+    {
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Received Audit Report from College",
+      "id": "act_11",
+      "srNo": 11,
+      "performedBy": "AR",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_12",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE",
+        "COORD",
+        "ASST_COORD"
+      ],
+      "phase": "Phase 1: Academic & SAP Setup",
+      "name": "Verified Course Structure & Audit Report",
+      "srNo": 12
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_13",
+      "name": "Verified Audit Report [ZAUDIT_REPORT]",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 13,
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE",
+        "COORD",
+        "ASST_COORD"
+      ]
+    },
+    {
+      "name": "Verified Acad Report [ZACAD_REPORT]",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 14,
+      "id": "act_14",
+      "performedBy": "COORD",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "srNo": 15,
+      "phase": "Phase 1: Academic & SAP Setup",
+      "name": "Received Common Modules Matrix from College",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_15",
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 16,
+      "performedBy": "COORD",
+      "name": "Verified Credit Report [ZCREDITREPORT]",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_16"
+    },
+    {
+      "name": "Confirmed Audit Reports [ZAUDIT_CHECK]",
+      "srNo": 17,
+      "phase": "Phase 1: Academic & SAP Setup",
+      "id": "act_17",
+      "performedBy": "AR",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 18,
+      "id": "act_18",
+      "name": "Sent Examiners' Panel Blank format to College"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 19,
+      "name": "Sent Ext. Examiners' Panel format to College",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "id": "act_19"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 20,
+      "performedBy": "ASST",
+      "name": "Uploaded Passing Crieteria for New Modules in SAP",
+      "id": "act_20",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "name": "Verified Passing Crieteria for Modules in SAP",
+      "id": "act_21",
+      "srNo": 21,
+      "performedBy": "COORD",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Preared Exam Time tables",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 22,
+      "id": "act_22",
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "srNo": 23,
+      "name": "Regular Exam Start Date",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_23",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_24",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Regular Exam End Date",
+      "srNo": 24
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_25",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 25,
+      "name": "Exam Timing (From - to)",
+      "performedBy": "ASST"
+    },
+    {
+      "id": "act_26",
+      "name": "Sent Exam Time tables to Colleges",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 26,
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "name": "Maintained Month & Year of Examination in SAP",
+      "id": "act_27",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "srNo": 27,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 1: Academic & SAP Setup",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "id": "act_28",
+      "srNo": 28,
+      "name": "Pre-Exam Process (for Regular Exam) in SAP"
+    },
+    {
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "srNo": 29,
+      "name": "Uploaded Schedule Assessment & E1 Open for Internal & Practical",
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_29",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 30,
+      "name": "Downloaded Blank Marksheets of Practical/Lab/Project",
+      "performedBy": "ASST",
+      "id": "act_30",
+      "phase": "Phase 2: ICA & Pre-Conduct"
+    },
+    {
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 31,
+      "name": "Received Practical/Lab/Project/Viva Timetables from College",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "id": "act_31"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_32",
+      "cond": "ALL",
+      "name": "Received ICA Portal Notice from College",
+      "srNo": 32,
+      "phase": "Phase 2: ICA & Pre-Conduct"
+    },
+    {
+      "id": "act_33",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Last date to upload ICA on the Student Portal",
+      "srNo": 33
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "id": "act_34",
+      "performedBy": "ASST",
+      "name": "Date of ICA marks publish & receipt of Student GR",
+      "srNo": 34
+    },
+    {
+      "srNo": 35,
+      "name": "Date of Edit Option and Student Portal Closure",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "id": "act_35",
+      "performedBy": "ASST"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "srNo": 36,
+      "name": "Sent Blank Marksheets of Practical/Lab/Project to College",
+      "id": "act_36",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 37,
+      "performedBy": "ASST",
+      "name": "Received Seating Plan from College",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "id": "act_37",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_38",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "cond": "ALL",
+      "name": "Verified Seating Plan received from College",
+      "srNo": 38,
+      "phase": "Phase 2: ICA & Pre-Conduct"
+    },
+    {
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "id": "act_39",
+      "name": "Prepared & Verified Schedule Assessment (WRIT)",
+      "srNo": 39,
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "cond": "ALL"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 40,
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "name": "Uploaded Schedule Assessment & E1 Booking (PWD)(WRIT)",
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_40"
+    },
+    {
+      "performedBy": "ASST",
+      "srNo": 41,
+      "name": "Uploaded Schedule Assessment & E1 Booking (WRIT)",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "id": "act_41",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "id": "act_42",
+      "performedBy": "COORD",
+      "name": "Confirmed ICA Marks Pushed into SAP by College",
+      "srNo": 42,
+      "phase": "Phase 2: ICA & Pre-Conduct"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 43,
+      "name": "Received Examiners' Panel from College",
+      "id": "act_43"
+    },
+    {
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "srNo": 44,
+      "name": "Received Ext. Examiners' Panel from College",
+      "id": "act_44"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_45",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Received Admission Cancelled Students List from College",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "srNo": 45
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_46",
+      "name": "Date of Last Instruction Day",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "srNo": 46,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "cond": "ALL",
+      "id": "act_47",
+      "performedBy": "ASST",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 47,
+      "name": "Confirmation of the student Portal IDs & Exam Roles from College"
+    },
+    {
+      "id": "act_48",
+      "cond": "ALL",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "name": "Received Attendance Defaulters List from College",
+      "performedBy": "ASST",
+      "srNo": 48,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "srNo": 49,
+      "name": "Sent Attendance Defaulter & Cancelled Students List to Splashgain",
+      "id": "act_49",
+      "phase": "Phase 2: ICA & Pre-Conduct"
+    },
+    {
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 50,
+      "name": "Sent email to Splashgain for Activation of Deactivated Students",
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_50"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "COORD",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 51,
+      "id": "act_51",
+      "name": "Verified Attendance Defaulter & Cancelled Students List in SAP"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_52",
+      "name": "Received O.229 List (only in Even Semesters) from College",
+      "srNo": 52,
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "cond": "EVEN_ONLY",
+      "performedBy": "ASST"
+    },
+    {
+      "id": "act_53",
+      "name": "Uploaded O.229 (only in Even Semesters) in SAP",
+      "srNo": 53,
+      "performedBy": "ASST",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "EVEN_ONLY"
+    },
+    {
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "performedBy": "ASST",
+      "srNo": 54,
+      "name": "Printed QR Codes",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "id": "act_54"
+    },
+    {
+      "name": "Verified QR Codes",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "id": "act_55",
+      "srNo": 55,
+      "requiredVerifiers": [
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST_COORD",
+      "cond": "ALL"
+    },
+    {
+      "performedBy": "ASST",
+      "id": "act_56",
+      "cond": "ALL",
+      "name": "Submitted QR Codes to College",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 56,
+      "phase": "Phase 2: ICA & Pre-Conduct"
+    },
+    {
+      "id": "act_57",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "name": "Sent Halltickets emails & SMSs to Students",
+      "srNo": 57
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_58",
+      "phase": "Phase 2: ICA & Pre-Conduct",
+      "srNo": 58,
+      "performedBy": "ASST",
+      "name": "Last Day of Regular Exam Practical/Lab/Project"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 59,
+      "phase": "Phase 3: OSM & Evaluation",
+      "name": "Maintained Exam Attendance in Splashgain (Daily)",
+      "id": "act_59"
+    },
+    {
+      "srNo": 60,
+      "name": "Verified OSM UFM Count & Reject Count in Splashgain (Daily)",
+      "phase": "Phase 3: OSM & Evaluation",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "cond": "ALL",
+      "id": "act_60"
+    },
+    {
+      "srNo": 61,
+      "name": "Received Marksheets of Practical/Lab/Project/Viva from College",
+      "phase": "Phase 3: OSM & Evaluation",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "id": "act_61"
+    },
+    {
+      "phase": "Phase 3: OSM & Evaluation",
+      "performedBy": "ASST",
+      "srNo": 62,
+      "name": "Uploaded Marks of ICA/Lab/Project/Viva in SAP",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_62"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "phase": "Phase 3: OSM & Evaluation",
+      "srNo": 63,
+      "name": "Verified Internal Marks Pushed in SAP (10% Data)",
+      "id": "act_63"
+    },
+    {
+      "examScope": "BOTH",
+      "id": "act_64",
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "phase": "Phase 3: OSM & Evaluation",
+      "name": "Evaluation of All Modules Completed",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 64
+    },
+    {
+      "performedBy": "COORD",
+      "examScope": "BOTH",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 65,
+      "name": "Verified Question wise Marks of Splashgain (for Reopen process)",
+      "id": "act_65",
+      "phase": "Phase 3: OSM & Evaluation"
+    },
+    {
+      "examScope": "BOTH",
+      "cond": "ALL",
+      "id": "act_66",
+      "srNo": 66,
+      "phase": "Phase 3: OSM & Evaluation",
+      "name": "Reopened Answer books for Moderation (if any)",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_67",
+      "phase": "Phase 3: OSM & Evaluation",
+      "performedBy": "ASST",
+      "examScope": "BOTH",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Moderation of All Modules Completed",
+      "srNo": 67
+    },
+    {
+      "srNo": 68,
+      "phase": "Phase 3: OSM & Evaluation",
+      "name": "Verified Assessment Report",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "examScope": "BOTH",
+      "id": "act_68",
+      "cond": "ALL",
+      "performedBy": "COORD"
+    },
+    {
+      "srNo": 69,
+      "name": "Verfified Moderation Report",
+      "examScope": "BOTH",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 3: OSM & Evaluation",
+      "cond": "ALL",
+      "id": "act_69",
+      "performedBy": "COORD"
+    },
+    {
+      "srNo": 70,
+      "name": "Verified IVR with OSM Marks",
+      "examScope": "BOTH",
+      "performedBy": "COORD",
+      "cond": "ALL",
+      "phase": "Phase 3: OSM & Evaluation",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_70"
+    },
+    {
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "examScope": "BOTH",
+      "srNo": 71,
+      "name": "100% Moderation (if Marks % Change > 10% in 50% of Total Students)",
+      "cond": "ALL",
+      "phase": "Phase 3: OSM & Evaluation",
+      "performedBy": "AR",
+      "id": "act_71"
+    },
+    {
+      "id": "act_72",
+      "performedBy": "COORD",
+      "cond": "ALL",
+      "examScope": "BOTH",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 4: Regular Results",
+      "name": "Confirm UFM Cases with College",
+      "srNo": 72
+    },
+    {
+      "id": "act_73",
+      "cond": "ALL",
+      "performedBy": "COORD",
+      "name": "UFM Cases & Credit Shortage Students (Results in abeyance/Exm hold)",
+      "phase": "Phase 4: Regular Results",
+      "srNo": 73,
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "examScope": "BOTH"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "id": "act_74",
+      "examScope": "BOTH",
+      "name": "Executed and Verified Gracing",
+      "performedBy": "AR",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 74
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST_COORD",
+      "examScope": "REGULAR_ONLY",
+      "phase": "Phase 4: Regular Results",
+      "srNo": 75,
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE",
+        "COORD",
+        "AR"
+      ],
+      "id": "act_75",
+      "name": "Executed & Verified Highest Marks"
+    },
+    {
+      "name": "Executed and Verified GPA",
+      "id": "act_76",
+      "srNo": 76,
+      "phase": "Phase 4: Regular Results",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR"
+    },
+    {
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "id": "act_77",
+      "name": "Executed and Verified Progression",
+      "performedBy": "AR",
+      "srNo": 77
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 4: Regular Results",
+      "id": "act_78",
+      "srNo": 78,
+      "name": "Received UMIC Meeting Minutes from College",
+      "performedBy": "ASST",
+      "examScope": "BOTH"
+    },
+    {
+      "performedBy": "AR",
+      "srNo": 79,
+      "name": "Performed Revert Gracing of UFM Absolved Students (if any)",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_79",
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results"
+    },
+    {
+      "phase": "Phase 4: Regular Results",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_80",
+      "name": "Applied Exam Hold on UFM Cases Students",
+      "srNo": 80,
+      "performedBy": "COORD",
+      "cond": "ALL"
+    },
+    {
+      "srNo": 81,
+      "performedBy": "AR",
+      "name": "Processed & Locked the Results of UFM Cases Students",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 4: Regular Results",
+      "cond": "ALL",
+      "id": "act_81"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_82",
+      "srNo": 82,
+      "phase": "Phase 4: Regular Results",
+      "name": "Sent email to college regarding Results of UFM Cases Students"
+    },
+    {
+      "id": "act_83",
+      "cond": "FINAL_ONLY",
+      "name": "Verified GPA & CGPA Report (Final Semesters)",
+      "srNo": 83,
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "phase": "Phase 4: Regular Results"
+    },
+    {
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "id": "act_84",
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "name": "Verified Result Gazettes",
+      "srNo": 84
+    },
+    {
+      "id": "act_85",
+      "name": "Verified Grade Sheets",
+      "srNo": 85,
+      "phase": "Phase 4: Regular Results",
+      "performedBy": "COORD",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "srNo": 86,
+      "id": "act_86",
+      "name": "Updated Pass % Excel file",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "performedBy": "AR",
+      "srNo": 87,
+      "name": "Sent Result Gazettes & Pass % to CoE",
+      "id": "act_87",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "srNo": 88,
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Generated Regular Exam Toppers List",
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "id": "act_88"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "id": "act_89",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "name": "Removed Hold on UFM Absolved Cases (if any)",
+      "srNo": 89
+    },
+    {
+      "id": "act_90",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "name": "Informed College after Processing of Result of UFM Absolved Cases",
+      "performedBy": "ASST",
+      "srNo": 90
+    },
+    {
+      "id": "act_91",
+      "cond": "ALL",
+      "phase": "Phase 4: Regular Results",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "name": "Regular Exam Results Declared",
+      "srNo": 91
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_92",
+      "srNo": 92,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Downloaded Result Gazettes after Result Declaration",
+      "phase": "Phase 4: Regular Results"
+    },
+    {
+      "name": "Downloaded Grad Sheets",
+      "id": "act_93",
+      "performedBy": "ASST",
+      "srNo": 93,
+      "phase": "Phase 4: Regular Results",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "name": "Result Notice Page",
+      "id": "act_94",
+      "performedBy": "ASST",
+      "srNo": 94,
+      "phase": "Phase 4: Regular Results",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "srNo": 95,
+      "phase": "Phase 4: Regular Results",
+      "name": "Downloaded Result Analysis (Programwise, Modulewise & Overall)",
+      "performedBy": "ASST",
+      "id": "act_95",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "name": "Downloaded Toppers Lists",
+      "id": "act_96",
+      "srNo": 96,
+      "phase": "Phase 4: Regular Results",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "performedBy": "ASST"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 5: Revaluation (GR)",
+      "performedBy": "ASST",
+      "id": "act_97",
+      "srNo": 97,
+      "name": "Date of GR (Reval) Portal Open"
+    },
+    {
+      "performedBy": "ASST",
+      "name": "Date of GR (Reval) Portal Closure",
+      "srNo": 98,
+      "id": "act_98",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 5: Revaluation (GR)",
+      "cond": "ALL"
+    },
+    {
+      "name": "GR (Reval) Application Stuck Student Email to SAP",
+      "id": "act_99",
+      "srNo": 99,
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 5: Revaluation (GR)",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "phase": "Phase 5: Revaluation (GR)",
+      "id": "act_100",
+      "srNo": 100,
+      "name": "Download final GR (Reval) Application Students List"
+    },
+    {
+      "id": "act_101",
+      "phase": "Phase 5: Revaluation (GR)",
+      "name": "Number of GR (Reval) Applications Received",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 101,
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_102",
+      "performedBy": "COORD",
+      "phase": "Phase 5: Revaluation (GR)",
+      "srNo": 102,
+      "name": "Revaluation Completed"
+    },
+    {
+      "performedBy": "COORD",
+      "id": "act_103",
+      "cond": "ALL",
+      "name": "Verified Revaluation Result Gazettes",
+      "srNo": 103,
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 5: Revaluation (GR)"
+    },
+    {
+      "performedBy": "COORD",
+      "id": "act_104",
+      "cond": "FINAL_ONLY",
+      "phase": "Phase 5: Revaluation (GR)",
+      "name": "Verified Passing Certificates (Final Semesters only)",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 104
+    },
+    {
+      "name": "Revaluation Results Delcared",
+      "srNo": 105,
+      "id": "act_105",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "phase": "Phase 5: Revaluation (GR)",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 5: Revaluation (GR)",
+      "srNo": 106,
+      "performedBy": "ASST",
+      "name": "Printed Result Gazettes, Grade Sheets, Passing, Analysis (After Reval)",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_106"
+    },
+    {
+      "name": "Updated Pass %, CoE Report (After Revaluation)",
+      "id": "act_107",
+      "srNo": 107,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "phase": "Phase 5: Revaluation (GR)",
+      "cond": "ALL"
+    },
+    {
+      "srNo": 108,
+      "name": "Sent Result Gazettes, Refund Lists & Reval Report for CoE Signature",
+      "phase": "Phase 5: Revaluation (GR)",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_108",
+      "performedBy": "AR",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_109",
+      "performedBy": "ASST",
+      "name": "Prepared Letter to College for Submission of Reports",
+      "phase": "Phase 5: Revaluation (GR)",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 109
+    },
+    {
+      "id": "act_110",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "name": "Sent Result Sheets, Grade Cards, Passing, Acknowldgement list to College",
+      "srNo": 110,
+      "performedBy": "ASST",
+      "phase": "Phase 5: Revaluation (GR)"
+    },
+    {
+      "srNo": 111,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Prepared Re-Exam Portal Opening Notice",
+      "cond": "ALL",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_111",
+      "performedBy": "ASST"
+    },
+    {
+      "name": "Send Re-Exam Portal Opening Notice to College",
+      "id": "act_112",
+      "srNo": 112,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "id": "act_113",
+      "name": "Re-Exam Portal Opening Date",
+      "srNo": 113,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL",
+      "performedBy": "ASST"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_114",
+      "name": "Re-Exam Portal Closing Date",
+      "srNo": 114,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_115",
+      "name": "Re-Exam Portal Super Late Fee Date",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 115
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_116",
+      "performedBy": "ASST",
+      "name": "Downloaded Failure Report from SAP",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 116,
+      "cond": "ALL"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST",
+      "srNo": 117,
+      "name": "Prepared Re-Exam Timetables (based on Failure List)",
+      "cond": "ALL",
+      "id": "act_117"
+    },
+    {
+      "performedBy": "COORD",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_118",
+      "cond": "ALL",
+      "name": "Re-exam Portal Opening Process in SAP",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 118
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 119,
+      "name": "Performed Pre-Exam Process for Re-Exam",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_119",
+      "performedBy": "COORD"
+    },
+    {
+      "name": "Re-Exam Portal email & SMS sent",
+      "id": "act_120",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 120,
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "id": "act_121",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Sent Stuck Student Email to SAP Team",
+      "srNo": 121
+    },
+    {
+      "srNo": 122,
+      "name": "Downloaded Final Re-exam Appl. Data",
+      "performedBy": "ASST",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL",
+      "id": "act_122",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_123",
+      "cond": "ALL",
+      "name": "Re-Exam Offline Applications (if any)",
+      "srNo": 123,
+      "performedBy": "ASST",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "srNo": 124,
+      "name": "Finalised Re-Exam Time tables (based on Applications)",
+      "performedBy": "COORD",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_124",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "id": "act_125",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "name": "Sent Blank Marksheets of ICA to College (Re-Exam)",
+      "srNo": 125,
+      "performedBy": "ASST",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "srNo": 126,
+      "name": "Received Seating Arrangement from College (Re-Exam)",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_126",
+      "cond": "ALL",
+      "performedBy": "ASST"
+    },
+    {
+      "srNo": 127,
+      "name": "Verified Seating Arrangement received from College (Re-Exam)",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_127",
+      "performedBy": "COORD",
+      "cond": "ALL"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 128,
+      "name": "Uploaded Schedule Assessment (Re-Exam)",
+      "cond": "ALL",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST",
+      "id": "act_128"
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Sent Halltickets email/sms (Re-Exam)",
+      "srNo": 129,
+      "id": "act_129",
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "srNo": 130,
+      "name": "Printed & Verified QR Codes (Re-Exam)",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "id": "act_130"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 131,
+      "name": "Sent QR Codes to College (Re-Exam)",
+      "id": "act_131",
+      "performedBy": "ASST"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_132",
+      "cond": "ALL",
+      "name": "Received Marksheets of ICA from College (Re-Exam)",
+      "srNo": 132,
+      "performedBy": "ASST"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_133",
+      "srNo": 133,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST",
+      "name": "Uploaded ICA Marks in SAP"
+    },
+    {
+      "id": "act_134",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "performedBy": "COORD",
+      "name": "Verifed ICA Marks entered in SAP",
+      "srNo": 134
+    },
+    {
+      "id": "act_135",
+      "cond": "ALL",
+      "name": "Re-Exam Start Date",
+      "performedBy": "ASST",
+      "srNo": 135,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_136",
+      "name": "Re-Exam End Date",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 136,
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_137",
+      "srNo": 137,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Evaluation of All Modules Completed (Re-Exam)"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 138,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_138",
+      "name": "Moderation of All Modules Completed (Re-Exam)"
+    },
+    {
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_139",
+      "performedBy": "COORD",
+      "examScope": "BOTH",
+      "name": "Verified Question wise Marks of Splashgain (for Reopen process)",
+      "srNo": 139
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "srNo": 140,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Reopened Answer books for Moderation (if any)",
+      "id": "act_140"
+    },
+    {
+      "id": "act_141",
+      "name": "Verfify Moderation Report (Re-Exam)",
+      "performedBy": "COORD",
+      "srNo": 141,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "100% Moderation (if Marks % Change > 10% in 50% of Total Students)",
+      "id": "act_142",
+      "srNo": 142,
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "srNo": 143,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_143",
+      "name": "Received UMIC Meeting Minutes from College (Re-Exam)",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 144,
+      "performedBy": "COORD",
+      "name": "Maintained UFM Penalty in SAP",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_144"
+    },
+    {
+      "srNo": 145,
+      "name": "Executed & Verified Gracing (Re-Exam)",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "AR",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_145",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_146",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Executed & Verified GPA (Re-Exam)",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 146,
+      "cond": "ALL",
+      "performedBy": "AR"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "AR",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "id": "act_147",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Executed & Verified Progression (Re-Exam)",
+      "srNo": 147
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Generated & Verified Result Gazettes (Re-Exam)",
+      "id": "act_148",
+      "performedBy": "COORD",
+      "srNo": 148,
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "performedBy": "COORD",
+      "id": "act_149",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Generated & Verified Grade Sheets (Re-Exam)",
+      "srNo": 149
+    },
+    {
+      "id": "act_150",
+      "cond": "ALL",
+      "performedBy": "AR",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Sent Result Gazettes & Pass % to CoE (Re-Exam)",
+      "srNo": 150
+    },
+    {
+      "performedBy": "AR",
+      "id": "act_151",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL",
+      "name": "Results Declared & Locked (Re-Exam)",
+      "srNo": 151,
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "srNo": 152,
+      "name": "Revert Gracing of UFM Case Students (if the decision received after declaration of results)",
+      "id": "act_152",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "AR"
+    },
+    {
+      "name": "Opening Date of GR (Reval) Portal Open (Re-Exam)",
+      "id": "act_153",
+      "srNo": 153,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 154,
+      "name": "Closing Date of GR (Reval) Portal Closed (Re-Exam)",
+      "id": "act_154",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST"
+    },
+    {
+      "id": "act_155",
+      "cond": "ALL",
+      "name": "GR Application Stuck Student Email (Re-Exam) to SAP Team",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 155,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_156",
+      "cond": "ALL",
+      "name": "Generated final GR Application Report",
+      "srNo": 156,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_157",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Revaluation Completed",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "COORD",
+      "srNo": 157
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 158,
+      "id": "act_158",
+      "name": "Executed & Verified Gracing (Re-Exam GR)"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_159",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Executed & Verified GPA (Re-Exam GR)",
+      "srNo": 159
+    },
+    {
+      "id": "act_160",
+      "name": "Executed & Verified Progression (Re-Exam GR)",
+      "srNo": 160,
+      "performedBy": "AR",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_161",
+      "cond": "ALL",
+      "name": "Progression (for SNGU after Result Declare)",
+      "srNo": 161,
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR"
+    },
+    {
+      "id": "act_162",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Reval Results Delcared (Re-Exam GR)",
+      "srNo": 162,
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "AR",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_163",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "performedBy": "ASST",
+      "name": "Downloaded Final GMR",
+      "srNo": 163
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "name": "Updated Grade Card, Result Sheet, Analysis, update Pass %, CoE Report",
+      "id": "act_164",
+      "srNo": 164,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "performedBy": "ASST"
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 165,
+      "name": "Maintained Exam Hold of UFM Cases in SAP",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "id": "act_165",
+      "cond": "ALL"
+    },
+    {
+      "performedBy": "AR",
+      "cond": "ALL",
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 166,
+      "name": "Sent Result Gazettes, Refund List & Reval Report for CoE Signature",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_166"
+    },
+    {
+      "phase": "Phase 6: Re-Exam & Re-Exam GR",
+      "srNo": 167,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Letter to College for Submission of Result Sheets, Grade Cards, etc.",
+      "cond": "ALL",
+      "id": "act_167",
+      "performedBy": "ASST"
+    },
+    {
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_168",
+      "name": "Failure Report",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 168,
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "id": "act_169",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 169,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Print Result Gazettes"
+    },
+    {
+      "srNo": 170,
+      "name": "Print QR Codes",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_170",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "performedBy": "ASST"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_171",
+      "name": "Print Grade Cards (including RRLE Cases)",
+      "srNo": 171,
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation"
+    },
+    {
+      "srNo": 172,
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Declare Results",
+      "performedBy": "AR",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "id": "act_172"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 173,
+      "name": "Download/Execute Digilocker Data API",
+      "id": "act_173"
+    },
+    {
+      "cond": "FINAL_ONLY",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "COORD",
+      "id": "act_174",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 174,
+      "name": "Deregistration of Pass Students (Final Sem)"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_175",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Creation of Student Portal IDs",
+      "srNo": 175
+    },
+    {
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_176",
+      "name": "Lateral Entry Students Portal IDs",
+      "performedBy": "ASST",
+      "srNo": 176,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_177",
+      "name": "Block UFM Students Portal IDs",
+      "srNo": 177,
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "id": "act_178",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "name": "Stuck Student Re-exam appl. mail",
+      "srNo": 178,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Monitor Halltickets email/sms mail to SAP",
+      "id": "act_179",
+      "srNo": 179,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "srNo": 180,
+      "id": "act_180",
+      "name": "Activation of Deactivated Students",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation"
+    },
+    {
+      "srNo": 181,
+      "name": "Exam Time table",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "ASST",
+      "id": "act_181",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 182,
+      "name": "Attendance Defaulter List",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "id": "act_182"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 183,
+      "id": "act_183",
+      "performedBy": "ASST",
+      "name": "Examiners' Panel"
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 184,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Blank Ext. Examiners' List",
+      "id": "act_184",
+      "performedBy": "ASST"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Send QR Codes to College",
+      "srNo": 185,
+      "id": "act_185",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "performedBy": "ASST"
+    },
+    {
+      "id": "act_186",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "name": "Re-Exam Portal Notice",
+      "performedBy": "ASST",
+      "srNo": 186,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "srNo": 187,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "ICA/Lab Blank Marksheets Sent to College",
+      "id": "act_187"
+    },
+    {
+      "srNo": 188,
+      "name": "Confirmation E-mail",
+      "performedBy": "ASST",
+      "id": "act_188",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "cond": "EVEN_ONLY",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_189",
+      "srNo": 189,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "O.229 Students List"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 190,
+      "name": "Halltickets",
+      "id": "act_190"
+    },
+    {
+      "srNo": 191,
+      "name": "QR Codes",
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_191"
+    },
+    {
+      "srNo": 192,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Identify \"0\" ICA Marks Students & confirm",
+      "id": "act_192",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_193",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Practical/ICA/Lab Marksheets",
+      "srNo": 193
+    },
+    {
+      "name": "Verified Moderation Report",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 194,
+      "performedBy": "COORD",
+      "id": "act_194",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_195",
+      "performedBy": "COORD",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "name": "Question wise marks Verified",
+      "srNo": 195
+    },
+    {
+      "name": "Completed Moderation of Reopened ABs",
+      "srNo": 196,
+      "id": "act_196",
+      "performedBy": "COORD",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "srNo": 197,
+      "name": "Monitor Result Declaration mail to SAP",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "ASST",
+      "id": "act_197"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_198",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "GR Stuck Student mail",
+      "srNo": 198
+    },
+    {
+      "srNo": 199,
+      "name": "Manual Creation of GR Record (if any)",
+      "cond": "ALL",
+      "performedBy": "COORD",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_199",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "id": "act_200",
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Moderation Count for Honorarimum",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 200
+    },
+    {
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 201,
+      "name": "Reval Refund Report",
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_201"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Revaluation Count for Honorarium",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 202,
+      "performedBy": "ASST",
+      "id": "act_202",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_203",
+      "name": "Grade Cards",
+      "srNo": 203,
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_204",
+      "srNo": 204,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Stock of Stationery"
+    },
+    {
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 205,
+      "name": "Question wise marks",
+      "id": "act_205",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation"
+    },
+    {
+      "cond": "ALL",
+      "srNo": 206,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Question wise marks uploaded",
+      "id": "act_206",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation"
+    },
+    {
+      "srNo": 207,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Submit Grade Cards to College",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "cond": "ALL",
+      "id": "act_207"
+    },
+    {
+      "id": "act_208",
+      "name": "Update CoE Report",
+      "performedBy": "ASST",
+      "srNo": 208,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "name": "Upload ABC IDs on DigiLocker",
+      "srNo": 209,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_209",
+      "cond": "ALL",
+      "performedBy": "COORD"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 210,
+      "id": "act_210",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "Send Rejected Answer Books Report"
+    },
+    {
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "AR",
+      "srNo": 211,
+      "name": "Send OSM-UFM Report to COE",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "id": "act_211"
+    },
+    {
+      "srNo": 212,
+      "name": "Send Result Processing Status",
+      "performedBy": "AR",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "ALL",
+      "id": "act_212"
+    },
+    {
+      "name": "Maintain UFM Pass % file CoE Report, etc.",
+      "srNo": 213,
+      "id": "act_213",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "cond": "ALL"
+    },
+    {
+      "id": "act_214",
+      "cond": "ALL",
+      "name": "100% Moderation Process",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 214,
+      "performedBy": "AR",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation"
+    },
+    {
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_215",
+      "performedBy": "COORD",
+      "name": "Upload in Digilocker",
+      "srNo": 215
+    },
+    {
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_216",
+      "srNo": 216,
+      "name": "Upadated Grade Cards",
+      "performedBy": "ASST"
+    },
+    {
+      "cond": "FINAL_ONLY",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_217",
+      "srNo": 217,
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Upadate in Convocation Data"
+    },
+    {
+      "cond": "ALL",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_218",
+      "name": "Update in CoE Report",
+      "srNo": 218,
+      "performedBy": "ASST"
+    },
+    {
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "NAD-Digilocker (ABC Data)",
+      "id": "act_219",
+      "srNo": 219,
+      "performedBy": "COORD",
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_220",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "UoM - Exam Track Data",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "COORD",
+      "srNo": 220
+    },
+    {
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "COORD",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 221,
+      "name": "UoM - Result Track Data",
+      "cond": "ALL",
+      "id": "act_221"
+    },
+    {
+      "cond": "FINAL_ONLY",
+      "id": "act_222",
+      "performedBy": "ASST",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Prepare Convocation Data",
+      "srNo": 222
+    },
+    {
+      "cond": "FINAL_ONLY",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ],
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "performedBy": "AR",
+      "srNo": 223,
+      "name": "Sent Convocation Data to CoE",
+      "id": "act_223"
+    },
+    {
+      "name": "Mass Deregistration in SAP",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_224",
+      "srNo": 224,
+      "performedBy": "COORD",
+      "requiredVerifiers": [
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "FINAL_ONLY"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "AR",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 225,
+      "id": "act_225",
+      "name": "Result Declaration Resolution to College",
+      "requiredVerifiers": [
+        "DY_COE",
+        "COE"
+      ]
+    },
+    {
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_226",
+      "name": "Receive Convocation IDs from College",
+      "srNo": 226,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "FINAL_ONLY",
+      "performedBy": "ASST"
+    },
+    {
+      "performedBy": "ASST",
+      "id": "act_227",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "FINAL_ONLY",
+      "name": "Upload Convocation Data in SAP",
+      "srNo": 227
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "FINAL_ONLY",
+      "performedBy": "ASST",
+      "srNo": 228,
+      "id": "act_228",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "name": "Download Result Gazettes & Grade Sheets with Convocation IDs"
+    },
+    {
+      "cond": "FINAL_ONLY",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST",
+      "id": "act_229",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "srNo": 229,
+      "name": "Send Result Gazettes & Grade Sheets with Convocation IDs to College"
+    },
+    {
+      "srNo": 230,
+      "name": "Send Convocation Count in Required Format to College",
+      "id": "act_230",
+      "cond": "FINAL_ONLY",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "performedBy": "ASST"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 231,
+      "name": "Prepare Convocation Register",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "cond": "FINAL_ONLY",
+      "id": "act_231"
+    },
+    {
+      "name": "List of Meritorious Students",
+      "id": "act_232",
+      "srNo": 232,
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "cond": "ALL"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 233,
+      "name": "Send Digilocker Error file to College (if any)",
+      "id": "act_233"
+    },
+    {
+      "cond": "FINAL_ONLY",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_234",
+      "srNo": 234,
+      "name": "maintain convocation summary report year wise"
+    },
+    {
+      "cond": "ALL",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "id": "act_235",
+      "srNo": 235,
+      "name": "Check SMS Balance in Kaleyra"
+    },
+    {
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "srNo": 236,
+      "performedBy": "ASST",
+      "name": "Admission Cancellations",
+      "cond": "ALL",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation",
+      "id": "act_236"
+    },
+    {
+      "cond": "ALL",
+      "id": "act_237",
+      "srNo": 237,
+      "requiredVerifiers": [
+        "ASST_COORD",
+        "COORD",
+        "AR",
+        "DY_COE",
+        "COE"
+      ],
+      "name": "List of Rank Holders & Meritorious Students",
+      "performedBy": "ASST",
+      "phase": "Phase 7: Post-Exam, DigiLocker & Convocation"
+    }
+  ],
+  "contexts": {
+    "NMC__2025-26__45611 - B.Com.__Sem I__Regular": {
+      "logs": {
+        "act_8": {
+          "isNA": false
+        }
+      },
+      "headerMetrics": {
+        "numModules": 6,
+        "debarredStudents": 2,
+        "batch": "2025-26",
+        "totalStudents": 480,
+        "pwdStudents": 3,
+        "ufmCases": 1,
+        "numPrograms": 1
+      }
+    },
+    "NMC__2026-27__45611 - B.Com.__Sem I__Regular": {
+      "logs": {
+        "act_8": {
+          "verifications": {},
+          "performedDate": "",
+          "history": [
+            {
+              "timestamp": "2026-11-15T09:03:58.984Z",
+              "details": "Signed off verification tier AR",
+              "userName": "Ajay Shelar",
+              "action": "VERIFIED",
+              "role": "AR",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "dateValue": "2026-11-15",
+              "id": "1794733438984_4uj1"
+            },
+            {
+              "timestamp": "2026-11-15T09:04:16.238Z",
+              "action": "VERIFICATION_REVOKED",
+              "userName": "Ajay Shelar",
+              "role": "AR",
+              "details": "Revoked verification tier AR previously signed off by Ajay Shelar on 15-11-2026",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "id": "1794733456238_zne4",
+              "dateValue": "2026-11-15"
+            },
+            {
+              "role": "AR",
+              "action": "PERFORM_CLEARED",
+              "details": "Cleared performed date",
+              "dateValue": "",
+              "id": "1794733500086_ic8s",
+              "userName": "Ajay Shelar",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "timestamp": "2026-11-15T09:05:00.086Z"
+            }
+          ],
+          "performedByUser": null
+        }
+      },
+      "headerMetrics": {
+        "numModules": 6,
+        "debarredStudents": 0,
+        "totalStudents": 480,
+        "pwdStudents": 0,
+        "numPrograms": 1,
+        "batch": "2026-27",
+        "ufmCases": 3
+      }
+    },
+    "NM__2025-26__B.Com__Sem I__Regular": {
+      "headerMetrics": {
+        "batch": "2025-26",
+        "numPrograms": 1,
+        "ufmCases": 1,
+        "debarredStudents": 2,
+        "totalStudents": 480,
+        "numModules": 6,
+        "pwdStudents": 3
+      },
+      "logs": {
+        "act_8": {
+          "isNA": false
+        }
+      }
+    },
+    "NM__2026-27__B.Com__Sem I__Regular": {
+      "logs": {
+        "act_8": {
+          "performedDate": "2026-11-14",
+          "performedByUser": {
+            "name": "Ajay Shelar",
+            "email": "ajay.shelar@svkm.ac.in",
+            "timestamp": "2026-11-14T15:52:29.864Z"
+          }
+        }
+      },
+      "headerMetrics": {
+        "pwdStudents": 3,
+        "debarredStudents": 2,
+        "batch": "2026-27",
+        "ufmCases": 1,
+        "numModules": 6,
+        "totalStudents": 480,
+        "numPrograms": 1
+      }
+    },
+    "NM__2026-27__45611 - B.Com.__Sem I__Regular": {
+      "logs": {
+        "act_24": {
+          "performedByUser": {
+            "email": "pratiksha.mishra@svkm.ac.in",
+            "name": "Pratiksha Mishra",
+            "timestamp": "2026-11-15T05:30:42.926Z"
+          },
+          "history": [
+            {
+              "timestamp": "2026-11-15T05:30:38.753Z",
+              "id": "1794720638753_zyyr",
+              "role": "ASST",
+              "userName": "Pratiksha Mishra",
+              "action": "PERFORMED",
+              "details": "Marked activity as performed",
+              "userEmail": "pratiksha.mishra@svkm.ac.in",
+              "dateValue": "2026-10-15"
+            },
+            {
+              "dateValue": "2026-10-30",
+              "action": "PERFORMED",
+              "userName": "Pratiksha Mishra",
+              "id": "1794720642925_4gs1",
+              "role": "ASST",
+              "timestamp": "2026-11-15T05:30:42.925Z",
+              "userEmail": "pratiksha.mishra@svkm.ac.in",
+              "details": "Marked activity as performed"
+            }
+          ],
+          "performedDate": "2026-10-30"
+        },
+        "act_23": {
+          "performedByUser": {
+            "timestamp": "2026-11-15T05:30:15.069Z",
+            "name": "Pratiksha Mishra",
+            "email": "pratiksha.mishra@svkm.ac.in"
+          },
+          "performedDate": "2026-10-10",
+          "history": [
+            {
+              "userEmail": "pratiksha.mishra@svkm.ac.in",
+              "id": "1794720612897_d16s",
+              "timestamp": "2026-11-15T05:30:12.897Z",
+              "action": "PERFORMED",
+              "details": "Marked activity as performed",
+              "role": "ASST",
+              "userName": "Pratiksha Mishra",
+              "dateValue": "2026-10-15"
+            },
+            {
+              "action": "PERFORMED",
+              "timestamp": "2026-11-15T05:30:15.069Z",
+              "userEmail": "pratiksha.mishra@svkm.ac.in",
+              "role": "ASST",
+              "userName": "Pratiksha Mishra",
+              "dateValue": "2026-10-10",
+              "id": "1794720615069_0bgg",
+              "details": "Marked activity as performed"
+            }
+          ]
+        }
+      },
+      "headerMetrics": {
+        "examMonthYear": "October, 2026",
+        "debarredStudents": 2,
+        "numModules": 6,
+        "numPrograms": 1,
+        "pwdStudents": 3,
+        "totalStudents": 480,
+        "batch": "2026-27",
+        "ufmCases": 1
+      }
+    },
+    "UPG__2026-27__53014 - B.A.(FT&NMP)__Sem I__Regular": {
+      "headerMetrics": {
+        "totalStudents": 480,
+        "ufmCases": 1,
+        "numModules": 6,
+        "pwdStudents": 3,
+        "numPrograms": 1,
+        "debarredStudents": 2,
+        "batch": "2026-27"
+      },
+      "logs": {
+        "act_8": {
+          "isNA": false,
+          "history": [
+            {
+              "role": "ASST",
+              "details": "Marked as Not Applicable (N/A)",
+              "action": "MARKED_NA",
+              "dateValue": "",
+              "id": "1794733952621_5jnr",
+              "userEmail": "pratiksha.mishra@svkm.ac.in",
+              "userName": "Pratiksha Mishra",
+              "timestamp": "2026-11-15T09:12:32.621Z"
+            },
+            {
+              "dateValue": "",
+              "id": "1794733954373_gcng",
+              "details": "Marked as Applicable",
+              "action": "MARKED_APPLICABLE",
+              "timestamp": "2026-11-15T09:12:34.373Z",
+              "userName": "Pratiksha Mishra",
+              "role": "ASST",
+              "userEmail": "pratiksha.mishra@svkm.ac.in"
+            }
+          ]
+        }
+      }
+    },
+    "NMC__2026-27__45614 - B.M.S.__Sem I__Regular": {
+      "logs": {
+        "act_11": {
+          "performedByUser": {
+            "name": "Ajay Shelar",
+            "timestamp": "2026-11-16T06:36:45.507Z",
+            "email": "ajay.shelar@svkm.ac.in"
+          },
+          "verifications": {
+            "DY_COE": {
+              "verified": true,
+              "date": "2026-11-16",
+              "systemTimestamp": "2026-11-16T06:36:51.467Z",
+              "userName": "Ajay Shelar",
+              "userEmail": "ajay.shelar@svkm.ac.in"
+            }
+          },
+          "performedDate": "2026-10-19",
+          "history": [
+            {
+              "action": "PERFORMED",
+              "dateValue": "2026-11-19",
+              "userName": "Ajay Shelar",
+              "details": "Marked activity as performed",
+              "timestamp": "2026-11-16T06:36:40.716Z",
+              "id": "1794811000716_szjm",
+              "role": "AR",
+              "userEmail": "ajay.shelar@svkm.ac.in"
+            },
+            {
+              "userName": "Ajay Shelar",
+              "timestamp": "2026-11-16T06:36:45.507Z",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "role": "AR",
+              "id": "1794811005507_1ij0",
+              "dateValue": "2026-10-19",
+              "details": "Marked activity as performed",
+              "action": "PERFORMED"
+            },
+            {
+              "timestamp": "2026-11-16T06:36:51.467Z",
+              "action": "VERIFIED",
+              "details": "Signed off verification tier DY_COE",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "id": "1794811011467_t02s",
+              "userName": "Ajay Shelar",
+              "dateValue": "2026-11-16",
+              "role": "AR"
+            }
+          ]
+        },
+        "act_24": {
+          "performedDate": "2027-01-20",
+          "history": [
+            {
+              "role": "ASST",
+              "details": "Marked activity as performed",
+              "userName": "Anushka Ikke",
+              "dateValue": "2027-01-20",
+              "id": "1794742197943_jgwt",
+              "action": "PERFORMED",
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "timestamp": "2026-11-15T11:29:57.943Z"
+            }
+          ],
+          "performedByUser": {
+            "name": "Anushka Ikke",
+            "email": "anushka.ikke@svkm.ac.in",
+            "timestamp": "2026-11-15T11:29:57.943Z"
+          }
+        },
+        "act_12": {
+          "queryDetails": {
+            "reason": "Check again",
+            "resolutionNotes": "ok",
+            "timestamp": "2026-11-15T18:57:19.498Z",
+            "email": "alka.shukla@svkm.ac.in",
+            "resolvedBy": "Anushka Ikke",
+            "resolvedAt": "2026-11-16T06:33:45.700Z",
+            "raisedBy": "Alka Shukla",
+            "resolved": true,
+            "role": "COE"
+          },
+          "history": [
+            {
+              "role": "ASST",
+              "timestamp": "2026-11-15T12:39:27.053Z",
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "userName": "Anushka Ikke",
+              "details": "Marked activity as performed",
+              "dateValue": "2026-11-15",
+              "id": "1794746367053_r3vx",
+              "action": "PERFORMED"
+            },
+            {
+              "userName": "Ajay Shelar",
+              "timestamp": "2026-11-15T12:40:21.748Z",
+              "details": "Query raised: \"It was received in October month\"",
+              "id": "1794746421748_a6ho",
+              "role": "AR",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "dateValue": null,
+              "action": "QUERY_RAISED"
+            },
+            {
+              "id": "1794746596076_i9wz",
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "action": "PERFORMED",
+              "role": "ASST",
+              "timestamp": "2026-11-15T12:43:16.076Z",
+              "details": "Marked activity as performed",
+              "dateValue": "2026-10-27",
+              "userName": "Anushka Ikke"
+            },
+            {
+              "id": "1794746619881_zed3",
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "timestamp": "2026-11-15T12:43:39.882Z",
+              "userName": "Anushka Ikke",
+              "details": "Query resolved: \"Date changed\"",
+              "role": "ASST",
+              "action": "QUERY_RESOLVED",
+              "dateValue": null
+            },
+            {
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "action": "PERFORMED",
+              "timestamp": "2026-11-15T12:44:14.956Z",
+              "role": "AR",
+              "userName": "Ajay Shelar",
+              "details": "Marked activity as performed",
+              "id": "1794746654956_928n",
+              "dateValue": "2026-11-15"
+            },
+            {
+              "timestamp": "2026-11-15T18:52:48.002Z",
+              "action": "VERIFIED",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "id": "1794768768002_tuxh",
+              "userName": "Ajay Shelar",
+              "dateValue": "2026-11-16",
+              "role": "AR",
+              "details": "Signed off verification tier AR"
+            },
+            {
+              "action": "QUERY_RAISED",
+              "dateValue": null,
+              "userEmail": "alka.shukla@svkm.ac.in",
+              "role": "COE",
+              "id": "1794769039498_0x8p",
+              "details": "Query raised: \"Check again\"",
+              "userName": "Alka Shukla",
+              "timestamp": "2026-11-15T18:57:19.498Z"
+            },
+            {
+              "role": "ASST",
+              "dateValue": null,
+              "action": "QUERY_RESOLVED",
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "details": "Query resolved: \"ok\"",
+              "userName": "Anushka Ikke",
+              "timestamp": "2026-11-16T06:33:45.700Z",
+              "id": "1794810825700_eqpa"
+            },
+            {
+              "id": "1794810839314_6tko",
+              "action": "PERFORMED",
+              "details": "Marked activity as performed",
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "timestamp": "2026-11-16T06:33:59.314Z",
+              "role": "ASST",
+              "userName": "Anushka Ikke",
+              "dateValue": "2026-11-16"
+            },
+            {
+              "userEmail": "anushka.ikke@svkm.ac.in",
+              "details": "Marked activity as performed",
+              "timestamp": "2026-11-16T06:34:01.233Z",
+              "userName": "Anushka Ikke",
+              "action": "PERFORMED",
+              "role": "ASST",
+              "id": "1794810841233_f63d",
+              "dateValue": "2026-11-16"
+            }
+          ],
+          "remarks": "Check again ",
+          "performedByUser": {
+            "email": "anushka.ikke@svkm.ac.in",
+            "timestamp": "2026-11-16T06:34:01.233Z",
+            "name": "Anushka Ikke"
+          },
+          "verifications": {
+            "AR": {
+              "verified": true,
+              "userName": "Ajay Shelar",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "systemTimestamp": "2026-11-15T18:52:48.002Z",
+              "date": "2026-11-16"
+            }
+          },
+          "performedDate": "2026-11-16"
+        },
+        "act_10": {
+          "performedDate": "2026-10-19",
+          "history": [
+            {
+              "userName": "Ajay Shelar",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "action": "PERFORMED",
+              "timestamp": "2026-11-16T06:35:57.146Z",
+              "details": "Marked activity as performed",
+              "role": "AR",
+              "dateValue": "2026-10-16",
+              "id": "1794810957146_eljs"
+            },
+            {
+              "action": "PERFORMED",
+              "dateValue": "2026-10-19",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "role": "AR",
+              "details": "Marked activity as performed",
+              "timestamp": "2026-11-16T06:36:00.525Z",
+              "userName": "Ajay Shelar",
+              "id": "1794810960525_umo8"
+            },
+            {
+              "action": "VERIFIED",
+              "userEmail": "ajay.shelar@svkm.ac.in",
+              "id": "1794810969178_2us9",
+              "timestamp": "2026-11-16T06:36:09.178Z",
+              "details": "Signed off verification tier DY_COE",
+              "dateValue": "2026-11-16",
+              "role": "AR",
+              "userName": "Ajay Shelar"
+            }
+          ],
+          "verifications": {
+            "DY_COE": {
+              "systemTimestamp": "2026-11-16T06:36:09.178Z",
+              "userName": "Ajay Shelar",
+              "date": "2026-11-16",
+              "verified": true,
+              "userEmail": "ajay.shelar@svkm.ac.in"
+            }
+          },
+          "performedByUser": {
+            "timestamp": "2026-11-16T06:36:00.525Z",
+            "name": "Ajay Shelar",
+            "email": "ajay.shelar@svkm.ac.in"
+          }
+        },
+        "act_23": {
+          "history": [
+            {
+              "dateValue": "2027-01-11",
+              "id": "1794742164509_ro5d",
+              "userName": "Anushka Ikke",
+              "details": "Marked activity as performed",
+              "role": "ASST",
+              "action": "PERFORMED",
+              "timestamp": "2026-11-15T11:29:24.509Z",
+              "userEmail": "anushka.ikke@svkm.ac.in"
+            }
+          ],
+          "performedDate": "2027-01-11",
+          "performedByUser": {
+            "timestamp": "2026-11-15T11:29:24.509Z",
+            "name": "Anushka Ikke",
+            "email": "anushka.ikke@svkm.ac.in"
+          }
+        }
+      },
+      "headerMetrics": {
+        "batch": "2026-27",
+        "debarredStudents": 2,
+        "examMonthYear": "January, 2027",
+        "pwdStudents": 3,
+        "totalStudents": 480,
+        "numPrograms": 1,
+        "ufmCases": 1,
+        "numModules": 6
+      }
+    }
+  }
+}
