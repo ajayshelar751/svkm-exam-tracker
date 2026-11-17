@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Compact custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* Print styles for Official A4 Compliance Audit Report */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: "Times New Roman", Times, serif !important;
+  }
+  .no-print, header, nav, select, input[type="text"], input[type="search"], .floating-bar, button:not(.print-show) {
+    display: none !important;
+  }
+  .printable-audit-report {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  .page-break-before {
+    page-break-before: always;
+  }
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+}
