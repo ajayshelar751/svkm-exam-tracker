@@ -18,6 +18,23 @@ export default function CloudDetailsModal({ cloudStatus, lastSyncTime, onSyncNow
     }, 900);
   };
 
+  const handleResetDefaults = () => {
+    try {
+      localStorage.removeItem('svkm_supabase_url');
+      localStorage.removeItem('svkm_supabase_anon_key');
+      const defaultUrl = SUPABASE_CONFIG?.url || "https://wfkjekwxmodyzncytyqq.supabase.co";
+      const defaultKey = SUPABASE_CONFIG?.anonKey || "sb_publishable_evpiRRWqkrlBwWud2F6eIg_6oE3HnLs";
+      setConfigUrl(defaultUrl);
+      setConfigKey(defaultKey);
+      setSaveStatus("Reset to default SVKM credentials! Reconnecting...");
+      setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    } catch (e) {
+      console.warn("Error resetting Supabase credentials:", e);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800">
@@ -98,13 +115,22 @@ export default function CloudDetailsModal({ cloudStatus, lastSyncTime, onSyncNow
                 {saveStatus ? (
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{saveStatus}</span>
                 ) : <span />}
-                <button
-                  type="button"
-                  onClick={handleSaveConfig}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow"
-                >
-                  Save & Reconnect
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetDefaults}
+                    className="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-semibold transition"
+                  >
+                    Reset Defaults
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveConfig}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow"
+                  >
+                    Save & Reconnect
+                  </button>
+                </div>
               </div>
             </div>
           )}

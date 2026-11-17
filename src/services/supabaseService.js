@@ -3,6 +3,12 @@ import { SUPABASE_CONFIG } from '../constants/config.js';
 import { hashPassword, verifyPassword } from '../utils/crypto.js';
 import { normalizeExamCycles } from '../utils/helpers.js';
 
+if (typeof window !== 'undefined') {
+  if (!window.supabase) {
+    window.supabase = { createClient };
+  }
+}
+
 export class SupabaseService {
   static LOCAL_KEY = 'svkm_exam_portal_v1';
   static _supabaseClient = null;
@@ -118,12 +124,14 @@ export class SupabaseService {
     try {
       const savedUrl = localStorage.getItem('svkm_supabase_url');
       const savedKey = localStorage.getItem('svkm_supabase_anon_key');
-      return {
-        url: savedUrl || (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url) || "https://wfkjekwxmodyzncytyqq.supabase.co",
-        anonKey: savedKey || (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey) || "sb_publishable_evpiRRWqkrlBwWud2F6eIg_6oE3HnLs"
-      };
+      const defaultUrl = SUPABASE_CONFIG?.url || (typeof window !== 'undefined' && window.SUPABASE_CONFIG?.url) || "https://wfkjekwxmodyzncytyqq.supabase.co";
+      const defaultKey = SUPABASE_CONFIG?.anonKey || (typeof window !== 'undefined' && window.SUPABASE_CONFIG?.anonKey) || "sb_publishable_evpiRRWqkrlBwWud2F6eIg_6oE3HnLs";
+
+      const url = (savedUrl && savedUrl.trim().startsWith('http')) ? savedUrl.trim() : defaultUrl;
+      const anonKey = (savedKey && savedKey.trim().length > 10) ? savedKey.trim() : defaultKey;
+      return { url, anonKey };
     } catch (e) {
-      return (window.SUPABASE_CONFIG || { url: '', anonKey: '' });
+      return (SUPABASE_CONFIG || { url: "https://wfkjekwxmodyzncytyqq.supabase.co", anonKey: "sb_publishable_evpiRRWqkrlBwWud2F6eIg_6oE3HnLs" });
     }
   }
 
@@ -138,7 +146,8 @@ export class SupabaseService {
 
   // --- Initialization & Health Check ---
   static async initSupabase() {
-    if (!window.supabase) {
+    const clientFactory = createClient || (typeof window !== 'undefined' && window.supabase?.createClient);
+    if (!clientFactory) {
       console.warn("Supabase SDK (@supabase/supabase-js) not detected. Running in Local Fallback mode.");
       return null;
     }
@@ -148,7 +157,7 @@ export class SupabaseService {
       return null;
     }
     try {
-      const client = (createClient || window.supabase?.createClient)(cfg.url, cfg.anonKey, {
+      const client = clientFactory(cfg.url, cfg.anonKey, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
@@ -156,6 +165,11 @@ export class SupabaseService {
         }
       });
       this._supabaseClient = client;
+      if (typeof window !== 'undefined') {
+        window._supabaseClient = client;
+        if (!window.supabase) window.supabase = { createClient: clientFactory };
+        if (!window.SUPABASE_CONFIG) window.SUPABASE_CONFIG = cfg;
+      }
 
       // Connectivity probe
       try {
