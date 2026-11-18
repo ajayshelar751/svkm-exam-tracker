@@ -5,7 +5,8 @@ import {
   formatExamMonthYear,
   isActivityApplicableForCycle,
   getActivityExamScope,
-  computeActivityStatus
+  computeActivityStatus,
+  getStaffStudentScope
 } from './helpers.js';
 
 // --- Excel & JSON Backup Utilities ---
@@ -210,13 +211,21 @@ function exportFullDatabaseExcel(activities, contexts, config, users) {
 
   // Sheet 4: Staff_Directory
   const staffRows = [
-    ["User ID", "Name", "Email", "Role", "Is Admin", "Assigned Colleges", "Assigned Programs", "Active"]
+    ["User ID", "Name", "Email", "Role", "Is Admin", "Assigned Colleges", "Assigned Programs", "Students in Scope", "Scope Breakdown", "Active"]
   ];
   users.forEach(u => {
+    const scope = getStaffStudentScope(u, contexts, config);
+    const breakdownStr = Object.entries(scope.byCollege || {})
+      .filter(([_, count]) => count > 0)
+      .map(([col, count]) => `${col}: ${count.toLocaleString()}`)
+      .join(', ') || "None";
+
     staffRows.push([
       u.id, u.name, u.email, u.role, u.isAdmin ? "YES" : "NO",
       (u.assignedColleges || []).join(', '),
       JSON.stringify(u.assignedPrograms || {}),
+      scope.totalStudents,
+      breakdownStr,
       u.active ? "ACTIVE" : "INACTIVE"
     ]);
   });

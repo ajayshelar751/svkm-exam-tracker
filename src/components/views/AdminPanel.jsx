@@ -4,7 +4,7 @@ import StaffFormModal from '../modals/StaffFormModal.jsx';
 import ActivityFormModal from '../modals/ActivityFormModal.jsx';
 import { INITIAL_PHASES } from '../../constants/config.js';
 import { hashPassword } from '../../utils/crypto.js';
-import { getActivityExamScope } from '../../utils/helpers.js';
+import { getActivityExamScope, getStaffStudentScope, normalizeProgramName } from '../../utils/helpers.js';
 import { exportCurrentViewExcel } from '../../utils/excelExport.js';
 
 // --- Admin Control Panel ---
@@ -56,8 +56,30 @@ export default function AdminPanel({
   const [editBatchVal, setEditBatchVal] = useState("");
   const [adminTab, setAdminTab] = useState("staff");
   const [staffSearch, setStaffSearch] = useState("");
+  const [staffBatchFilter, setStaffBatchFilter] = useState(context?.batch || config?.currentBatch || config?.batches?.[0] || 'ALL');
+  const [staffCycleFilter, setStaffCycleFilter] = useState("ALL");
+  const [staffSortField, setStaffSortField] = useState("name");
+  const [staffSortAsc, setStaffSortAsc] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [isAddingUser, setIsAddingUser] = useState(false);
+
+  // Student Scope Statistics per Staff Member
+  const staffStudentStats = useMemo(() => {
+    const statsMap = {};
+    (users || []).forEach(u => {
+      statsMap[u.id] = getStaffStudentScope(u, contexts, config, staffBatchFilter, staffCycleFilter);
+    });
+    return statsMap;
+  }, [users, contexts, config, staffBatchFilter, staffCycleFilter]);
+
+  const handleStaffSort = (field) => {
+    if (staffSortField === field) {
+      setStaffSortAsc(prev => !prev);
+    } else {
+      setStaffSortField(field);
+      setStaffSortAsc(field === 'students' ? false : true);
+    }
+  };
 
   // Activity Master State
   const [actSearch, setActSearch] = useState("");
@@ -73,14 +95,26 @@ export default function AdminPanel({
   const [newProgramName, setNewProgramName] = useState("");
   const [progCollegeSelect, setProgCollegeSelect] = useState(config.colleges[0]?.id || "");
 
-  // Filtered staff
+  // Filtered and sorted staff
   const filteredStaff = useMemo(() => {
-    return users.filter(u => {
-      const q = staffSearch.toLowerCase().trim();
-      if (!q) return true;
-      return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q);
-    });
-  }, [users, staffSearch]);
+    return (users || [])
+      .filter(u => {
+        const q = staffSearch.toLowerCase().trim();
+        if (!q) return true;
+        return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q);
+      })
+      .sort((a, b) => {
+        if (staffSortField === 'students') {
+          const aCount = staffStudentStats[a.id]?.totalStudents || 0;
+          const bCount = staffStudentStats[b.id]?.totalStudents || 0;
+          return staffSortAsc ? aCount - bCount : bCount - aCount;
+        }
+        if (staffSortField === 'role') {
+          return staffSortAsc ? a.role.localeCompare(b.role) : b.role.localeCompare(a.role);
+        }
+        return staffSortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      });
+  }, [users, staffSearch, staffSortField, staffSortAsc, staffStudentStats]);
 
   // Filtered activities (sorted by Sr. No.)
   const filteredActs = useMemo(() => {
@@ -163,22 +197,53 @@ export default function AdminPanel({
       {adminTab === "staff" && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="relative">
-              <input
-                type="text"
-                value={staffSearch}
-                onChange={(e) => setStaffSearch(e.target.value)}
-                placeholder="Search staff name or email..."
-                className="w-64 pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-              />
-              <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-                <Icon name="search" size={14} />
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={staffSearch}
+                  onChange={(e) => setStaffSearch(e.target.value)}
+                  placeholder="Search staff name or email..."
+                  className="w-56 pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                />
+                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                  <Icon name="search" size={14} />
+                </div>
+              </div>
+
+              {/* Batch Scope Selector */}
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Batch:</span>
+                <select
+                  value={staffBatchFilter}
+                  onChange={(e) => setStaffBatchFilter(e.target.value)}
+                  className="text-xs bg-transparent text-slate-900 dark:text-white font-medium border-0 focus:ring-0 cursor-pointer pr-1"
+                >
+                  <option value="ALL">All Batches</option>
+                  {(config.batches || []).map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Exam Cycle Selector */}
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cycle:</span>
+                <select
+                  value={staffCycleFilter}
+                  onChange={(e) => setStaffCycleFilter(e.target.value)}
+                  className="text-xs bg-transparent text-slate-900 dark:text-white font-medium border-0 focus:ring-0 cursor-pointer pr-1"
+                >
+                  <option value="ALL">All Cycles</option>
+                  <option value="Regular">Regular Only</option>
+                  <option value="Re-Exam">Re-Exam Only</option>
+                </select>
               </div>
             </div>
 
             <button
               onClick={() => setIsAddingUser(true)}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow flex items-center gap-1.5 transition"
             >
               <Icon name="plus" size={14} />
               <span>Add New Staff Account</span>
@@ -189,89 +254,184 @@ export default function AdminPanel({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-100/70 dark:bg-slate-800/70 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase text-[10px]">
-                  <th className="py-2.5 px-3">Staff Name & Email</th>
-                  <th className="py-2.5 px-2 text-center">Role</th>
+                  <th 
+                    onClick={() => handleStaffSort('name')}
+                    className="py-2.5 px-3 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition select-none"
+                    title="Click to sort by staff name"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Staff Name & Email</span>
+                      {staffSortField === 'name' ? (
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{staffSortAsc ? '▲' : '▼'}</span>
+                      ) : (
+                        <span className="text-slate-300 dark:text-slate-600 text-[9px]">↕</span>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    onClick={() => handleStaffSort('role')}
+                    className="py-2.5 px-2 text-center cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition select-none"
+                    title="Click to sort by role"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span>Role</span>
+                      {staffSortField === 'role' && (
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{staffSortAsc ? '▲' : '▼'}</span>
+                      )}
+                    </div>
+                  </th>
                   <th className="py-2.5 px-2 text-center">Is Admin</th>
                   <th className="py-2.5 px-3">Assigned Colleges</th>
                   <th className="py-2.5 px-3">Assigned Programs</th>
+                  <th 
+                    onClick={() => handleStaffSort('students')}
+                    className="py-2.5 px-3 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition select-none"
+                    title="Click to sort by total students in scope"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Students in Scope</span>
+                      {staffSortField === 'students' ? (
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{staffSortAsc ? '▲' : '▼'}</span>
+                      ) : (
+                        <span className="text-slate-300 dark:text-slate-600 text-[9px]">↕</span>
+                      )}
+                    </div>
+                  </th>
                   <th className="py-2.5 px-2 text-center">Status</th>
                   <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredStaff.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="py-2.5 px-3">
-                      <div className="font-bold text-slate-900 dark:text-white">{u.name}</div>
-                      <div className="text-[11px] text-slate-500">{u.email}</div>
-                    </td>
-                    <td className="py-2.5 px-2 text-center">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-2 text-center">
-                      {u.isAdmin ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">
-                          Admin
+                {filteredStaff.map(u => {
+                  const stats = staffStudentStats[u.id] || { totalStudents: 0, byCollege: {}, cohortCount: 0 };
+                  const activeColleges = Object.entries(stats.byCollege).filter(([_, count]) => count > 0);
+
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="py-2.5 px-3">
+                        <div className="font-bold text-slate-900 dark:text-white">{u.name}</div>
+                        <div className="text-[11px] text-slate-500">{u.email}</div>
+                      </td>
+                      <td className="py-2.5 px-2 text-center">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
+                          {u.role}
                         </span>
-                      ) : (
-                        <span className="text-slate-400 text-[10px]">—</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="text-slate-700 dark:text-slate-300 font-medium">
-                        {u.assignedColleges?.includes('ALL') ? 'ALL Colleges' : u.assignedColleges?.join(', ')}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="text-slate-500 text-[11px] truncate max-w-[200px]" title={JSON.stringify(u.assignedPrograms || {})}>
-                        {u.assignedPrograms?.ALL?.includes('ALL') ? 'ALL Programs' : JSON.stringify(u.assignedPrograms || {})}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-2 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        u.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
-                      }`}>
-                        {u.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => onResetPassword(u.id)}
-                          className="px-2 py-1 text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg transition"
-                          title="Reset Password to Pass@123"
-                        >
-                          Reset Pass
-                        </button>
-                        <button
-                          onClick={() => setEditingUser(u)}
-                          className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                          title="Edit User"
-                        >
-                          <Icon name="edit-2" size={14} />
-                        </button>
-                        {u.role !== 'COE' ? (
-                          <button
-                            onClick={() => onDeleteUser(u.id)}
-                            className="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
-                            title="Delete User"
-                          >
-                            <Icon name="trash-2" size={14} />
-                          </button>
-                        ) : (
-                          <span
-                            className="p-1 text-slate-300 dark:text-slate-600 cursor-not-allowed inline-block"
-                            title="Institutional Rule: COE Account is protected and cannot be deleted"
-                          >
-                            <Icon name="lock" size={14} />
+                      </td>
+                      <td className="py-2.5 px-2 text-center">
+                        {u.isAdmin ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">
+                            Admin
                           </span>
+                        ) : (
+                          <span className="text-slate-400 text-[10px]">—</span>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="text-slate-700 dark:text-slate-300 font-medium">
+                          {u.assignedColleges?.includes('ALL') ? 'ALL Colleges' : u.assignedColleges?.join(', ')}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        {(() => {
+                          if (!u.assignedPrograms) return <span className="text-slate-400 text-[11px]">—</span>;
+                          if (u.assignedPrograms?.ALL?.includes('ALL')) {
+                            return <span className="font-medium text-slate-700 dark:text-slate-300 text-[11px]">ALL Programs</span>;
+                          }
+                          const entries = Object.entries(u.assignedPrograms).filter(([_, list]) => Array.isArray(list) && list.length > 0);
+                          if (entries.length === 0) return <span className="text-slate-400 text-[11px]">—</span>;
+                          return (
+                            <div className="space-y-0.5 max-w-[200px]" title={JSON.stringify(u.assignedPrograms)}>
+                              {entries.map(([col, progs]) => (
+                                <div key={col} className="text-[11px] truncate">
+                                  <span className="font-bold text-slate-700 dark:text-slate-300">{col}:</span>{' '}
+                                  <span className="text-slate-500">{progs.includes('ALL') ? 'ALL' : progs.join(', ')}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      {/* Students in Scope Column with Per-College Breakdown */}
+                      <td className="py-2.5 px-3">
+                        <div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-slate-900 dark:text-white text-xs">
+                              {stats.totalStudents.toLocaleString()}
+                            </span>
+                            <span className="text-[10px] text-slate-400">students</span>
+                          </div>
+                          {activeColleges.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1 max-w-[280px]">
+                              {activeColleges.map(([colCode, count]) => {
+                                const colObj = (config?.colleges || []).find(c => c.id === colCode || c.code === colCode);
+                                const colTitle = colObj ? `${colObj.name}: ${count.toLocaleString()} students` : `${colCode}: ${count.toLocaleString()} students`;
+                                return (
+                                  <span
+                                    key={colCode}
+                                    title={colTitle}
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/60"
+                                  >
+                                    {colCode}: {count.toLocaleString()}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-slate-400 mt-0.5">
+                              0 active cohorts
+                            </div>
+                          )}
+                          {stats.cohortCount > 0 && (
+                            <div className="text-[10px] text-slate-400 mt-0.5">
+                              {stats.cohortCount} cohort{stats.cohortCount === 1 ? '' : 's'}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          u.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                        }`}>
+                          {u.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => onResetPassword(u.id)}
+                            className="px-2 py-1 text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg transition"
+                            title="Reset Password to Pass@123"
+                          >
+                            Reset Pass
+                          </button>
+                          <button
+                            onClick={() => setEditingUser(u)}
+                            className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                            title="Edit User"
+                          >
+                            <Icon name="edit-2" size={14} />
+                          </button>
+                          {u.role !== 'COE' ? (
+                            <button
+                              onClick={() => onDeleteUser(u.id)}
+                              className="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
+                              title="Delete User"
+                            >
+                              <Icon name="trash-2" size={14} />
+                            </button>
+                          ) : (
+                            <span
+                              className="p-1 text-slate-300 dark:text-slate-600 cursor-not-allowed inline-block"
+                              title="Institutional Rule: COE Account is protected and cannot be deleted"
+                            >
+                              <Icon name="lock" size={14} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

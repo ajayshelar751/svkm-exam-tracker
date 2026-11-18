@@ -201,3 +201,102 @@ export function computeUserActionableItems(activities, contextsMap, config, curr
 
   return list.sort((a, b) => a.priority - b.priority);
 }
+
+/**
+ * Normalizes a program code/name for robust matching (e.g., "45611 - B.Com." -> "b.com")
+ */
+export function normalizeProgramName(prog) {
+  if (!prog) return '';
+  return String(prog)
+    .trim()
+    .toLowerCase()
+    .replace(/^\d+\s*[-–]\s*/, '')
+    .replace(/\.+$/, '');
+}
+
+/**
+ * Calculates student count in scope for a staff member based on their
+ * assigned colleges and programs, with per-college breakdown and cohort count.
+ */
+export function getStaffStudentScope(user, contexts, config, batchFilter = "ALL", cycleFilter = "ALL") {
+  if (!user) return { totalStudents: 0, byCollege: {}, cohortCount: 0 };
+
+  const isAdmin = !!user.isAdmin;
+  const role = user.role;
+  const isGlobal = isAdmin || ['COE', 'DY_COE'].includes(role) || (user.assignedColleges || []).includes('ALL');
+
+  const validColleges = config?.colleges || [];
+  const accessibleCollegeIds = isGlobal
+    ? validColleges.map(c => c.id)
+    : (user.assignedColleges || []);
+
+  const byCollege = {};
+  accessibleCollegeIds.forEach(colId => {
+    byCollege[colId] = 0;
+  });
+
+  let totalStudents = 0;
+  let cohortCount = 0;
+
+  Object.entries(contexts || {}).forEach(([ctxKey, ctxData]) => {
+    const parts = ctxKey.split('__');
+    if (parts.length < 5) return;
+    const [colId, batch, progId, sem, cycle] = parts;
+
+    // Academic Batch filter
+    if (batchFilter !== "ALL" && batch !== batchFilter) return;
+
+    // Exam Cycle filter
+    if (cycleFilter !== "ALL" && cycle !== cycleFilter) return;
+
+    // Check college match against user's accessible colleges
+    const matchedColId = accessibleCollegeIds.find(ac => {
+      if (ac === 'ALL' || ac.toLowerCase() === colId.toLowerCase()) return true;
+      const colObj = validColleges.find(c => c.id === ac || c.code === ac);
+      return colObj && (
+        colObj.id.toLowerCase() === colId.toLowerCase() || 
+        (colObj.code && colObj.code.toLowerCase() === colId.toLowerCase())
+      );
+    });
+    if (!matchedColId) return;
+
+    // Check program match for non-global staff
+    if (!isGlobal) {
+      const userProgs = user.assignedPrograms?.[matchedColId] || 
+                        user.assignedPrograms?.[colId] || 
+                        (user.assignedPrograms?.['ALL']?.includes('ALL') ? ['ALL'] : []);
+      
+      if (!userProgs.includes('ALL')) {
+        const normContextProg = String(progId).trim().toLowerCase();
+        const cleanContextProg = normalizeProgramName(progId);
+
+        const matches = userProgs.some(p => {
+          const normUserProg = String(p).trim().toLowerCase();
+          const cleanUserProg = normalizeProgramName(p);
+          return normContextProg === normUserProg || 
+                 cleanContextProg === cleanUserProg ||
+                 (cleanUserProg && cleanContextProg.includes(cleanUserProg)) ||
+                 (normUserProg && normContextProg.includes(normUserProg));
+        });
+
+        if (!matches) return;
+      }
+    }
+
+    // Extract student metrics
+    const m = ctxData?.headerMetrics || {};
+    const count = Number(m.totalStudents ?? (cycle === "Re-Exam" ? ((m.regBatchStudents || 0) + (m.prevBatchStudents || 0)) : 0)) || 0;
+
+    if (count > 0) {
+      byCollege[matchedColId] = (byCollege[matchedColId] || 0) + count;
+      totalStudents += count;
+      cohortCount++;
+    }
+  });
+
+  return {
+    totalStudents,
+    byCollege,
+    cohortCount
+  };
+}
