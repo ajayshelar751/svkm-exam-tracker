@@ -122,12 +122,13 @@ export function exportCurrentViewExcel(activities, currentLogs, context, headerM
 }
 
 function exportFullDatabaseExcel(activities, contexts, config, users) {
-  if (!window.XLSX) {
+  const xlsxLib = (XLSX && (XLSX.utils || XLSX.read)) ? XLSX : (typeof window !== 'undefined' ? window.XLSX : null);
+  if (!xlsxLib) {
     if (window.showPortalToast) window.showPortalToast("SheetJS library is still loading. Please try again in a moment.", "warning");
     return;
   }
 
-  const wb = XLSX.utils.book_new();
+  const wb = xlsxLib.utils.book_new();
 
   // Sheet 1: Activity_Logs
   const logRows = [

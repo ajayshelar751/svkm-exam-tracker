@@ -50,6 +50,13 @@ export default function SapOsmExcelModal({
     "23": "Sem VIII"
   };
 
+  // Helper to reliably resolve the SheetJS XLSX engine across ESM, CJS, and window global
+  const getXlsxEngine = () => {
+    if (XLSX && (XLSX.read || XLSX.utils)) return XLSX;
+    if (typeof window !== 'undefined' && window.XLSX) return window.XLSX;
+    return null;
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -58,10 +65,12 @@ export default function SapOsmExcelModal({
     setParsing(true);
 
     try {
-      if ((typeof XLSX === 'undefined' || !window.XLSX) && window.ensureSheetJSLoaded) {
+      let xlsxEngine = getXlsxEngine();
+      if (!xlsxEngine && typeof window !== 'undefined' && window.ensureSheetJSLoaded) {
         await window.ensureSheetJSLoaded();
+        xlsxEngine = getXlsxEngine();
       }
-      if (typeof XLSX === 'undefined' || !window.XLSX) {
+      if (!xlsxEngine) {
         throw new Error("SheetJS library is not loaded. Please verify ./xlsx.full.min.js exists in the local folder or refresh the page.");
       }
     } catch(loadErr) {
@@ -73,14 +82,15 @@ export default function SapOsmExcelModal({
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        if (typeof XLSX === 'undefined' || !window.XLSX) {
+        const xlsxEngine = getXlsxEngine();
+        if (!xlsxEngine) {
           throw new Error("SheetJS library is not loaded. Please verify ./xlsx.full.min.js exists in the local folder.");
         }
         const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: "binary", cellDates: true });
+        const wb = xlsxEngine.read(bstr, { type: "binary", cellDates: true });
         const sheetName = wb.SheetNames[0];
         const ws = wb.Sheets[sheetName];
-        const rawJson = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        const rawJson = xlsxEngine.utils.sheet_to_json(ws, { defval: "" });
 
         if (!rawJson || rawJson.length === 0) {
           throw new Error("The selected Excel sheet contains no data rows.");
