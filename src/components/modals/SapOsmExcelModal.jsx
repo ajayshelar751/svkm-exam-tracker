@@ -485,7 +485,7 @@ export default function SapOsmExcelModal({
     } catch (e) {
       console.error(e);
       if (window.showPortalToast) {
-        window.showPortalToast("Failed to batch synchronize cohorts. Please check network.", "error");
+        window.showPortalToast(e?.message ? `Sync error: ${e.message}` : "Failed to batch synchronize cohorts. Please check network.", "error");
       }
     } finally {
       setBatchSyncing(false);

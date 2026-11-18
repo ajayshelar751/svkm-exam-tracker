@@ -559,19 +559,23 @@ export default function App() {
     StorageService.saveLocalData({ config: nextConfig, users, activities, contexts: nextContexts });
 
     if (dbRef.current) {
-      dbRef.current.from('sap_excel_imports').insert({
-        file_name: fileName,
-        import_type: 'STUDENT_ENROLLMENT',
-        row_count: cohortsList.reduce((acc, c) => acc + (c.studentCount || 0), 0),
-        success_count: cohortsList.length,
-        status: 'COMPLETED',
-        errors: {
-          historyId: historyEntry.id,
-          mode: mode,
-          affectedContextKeys: affectedContextKeys,
-          previousSnapshot: previousSnapshot
-        }
-      }).catch(e => console.warn("Supabase import record notice:", e));
+      try {
+        await dbRef.current.from('sap_excel_imports').insert({
+          file_name: fileName,
+          import_type: 'STUDENT_ENROLLMENT',
+          row_count: cohortsList.reduce((acc, c) => acc + (c.studentCount || 0), 0),
+          success_count: cohortsList.length,
+          status: 'COMPLETED',
+          errors: {
+            historyId: historyEntry.id,
+            mode: mode,
+            affectedContextKeys: affectedContextKeys,
+            previousSnapshot: previousSnapshot
+          }
+        });
+      } catch (importErr) {
+        console.warn("Supabase import record notice:", importErr);
+      }
     }
 
     showToast(`Successfully applied ${cohortsList.length} cohorts (${mode === 'merge' ? 'Merged' : 'Replaced'}) from "${fileName}"!`, "success");
@@ -638,13 +642,17 @@ export default function App() {
         StorageService.saveLocalData({ config: nextConfig, users, activities, contexts: nextContexts });
 
         if (dbRef.current) {
-          dbRef.current.from('audit_history').insert({
-            action: 'EXCEL_IMPORT_ROLLED_BACK',
-            role_code: currentUser?.role || 'COE',
-            user_name: currentUser?.name || 'CED Admin',
-            user_email: currentUser?.email || 'coe@svkm.ac.in',
-            details: `Rolled back Excel file "${historyItem.fileName}" and restored previous metrics across ${historyItem.affectedContextKeys?.length || 0} cohorts.`
-          }).catch(e => console.warn(e));
+          try {
+            await dbRef.current.from('audit_history').insert({
+              action: 'EXCEL_IMPORT_ROLLED_BACK',
+              role_code: currentUser?.role || 'COE',
+              user_name: currentUser?.name || 'CED Admin',
+              user_email: currentUser?.email || 'coe@svkm.ac.in',
+              details: `Rolled back Excel file "${historyItem.fileName}" and restored previous metrics across ${historyItem.affectedContextKeys?.length || 0} cohorts.`
+            });
+          } catch (auditErr) {
+            console.warn("Audit history rollback notice:", auditErr);
+          }
         }
 
         showToast(`Successfully rolled back "${historyItem.fileName}" and restored previous metrics!`, "success");
