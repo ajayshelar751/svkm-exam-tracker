@@ -157,10 +157,7 @@ WHERE session_id IN (
     OR context_key LIKE 'MITHIBAI__%'
     OR context_key LIKE 'MBC__%'
     OR context_key LIKE 'DJSCE__%'
-)
-OR context_key LIKE 'MITHIBAI__%'
-OR context_key LIKE 'MBC__%'
-OR context_key LIKE 'DJSCE__%';
+);
 
 -- -----------------------------------------------------------------------------
 -- Step 3: Delete Forward-Compatible Child Records (safely checked)
