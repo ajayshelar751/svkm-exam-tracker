@@ -46,7 +46,7 @@ export default function ContextBar({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm py-2 px-4 no-print">
+    <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm py-2 px-4 no-print">
       <div className="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
         
         {/* Selectors */}

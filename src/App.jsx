@@ -1352,47 +1352,52 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Top Navbar */}
-      <TopNavbar
-        currentUser={currentUser}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        theme={theme}
-        setTheme={setTheme}
-        cloudStatus={cloudStatus}
-        syncError={syncError}
-        onRetrySync={async () => {
-          setSyncError(false);
-          const res = await SupabaseService.syncFromDatabase(dbRef.current, { config, users, activities, contexts });
-          if (res.success && res.data) {
-            if (res.data.config) setConfig(res.data.config);
-            if (res.data.users) setUsers(res.data.users);
-            if (res.data.activities) setActivities(res.data.activities);
-            if (res.data.contexts) setContexts(res.data.contexts);
-            setCloudStatus("CONNECTED");
-            setLastSyncTime(new Date());
+      {/* Top Sticky Header: TopNavbar + ContextBar (Pinned on Activity Tracker) */}
+      <header className="sticky top-0 z-30 no-print">
+        <TopNavbar
+          currentUser={currentUser}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          theme={theme}
+          setTheme={setTheme}
+          cloudStatus={cloudStatus}
+          syncError={syncError}
+          onRetrySync={async () => {
             setSyncError(false);
-            showToast("Cloud resynchronization successful!", "success");
-          } else {
-            showToast("Cloud sync failed. Running in fallback mode.", "warning");
-          }
-        }}
-        actionQueueCount={actionQueueCount}
-        onOpenPasswordModal={() => setShowPasswordModal(true)}
-        onOpenAuditModal={() => setShowAuditModal(true)}
-        onOpenCloudModal={() => setShowCloudModal(true)}
-        onSignOut={handleSignOut}
-      />
+            const res = await SupabaseService.syncFromDatabase(dbRef.current, { config, users, activities, contexts });
+            if (res.success && res.data) {
+              if (res.data.config) setConfig(res.data.config);
+              if (res.data.users) setUsers(res.data.users);
+              if (res.data.activities) setActivities(res.data.activities);
+              if (res.data.contexts) setContexts(res.data.contexts);
+              setCloudStatus("CONNECTED");
+              setLastSyncTime(new Date());
+              setSyncError(false);
+              showToast("Cloud resynchronization successful!", "success");
+            } else {
+              showToast("Cloud sync failed. Running in fallback mode.", "warning");
+            }
+          }}
+          actionQueueCount={actionQueueCount}
+          onOpenPasswordModal={() => setShowPasswordModal(true)}
+          onOpenAuditModal={() => setShowAuditModal(true)}
+          onOpenCloudModal={() => setShowCloudModal(true)}
+          onSignOut={handleSignOut}
+        />
 
-      {/* Main View Router */}
-      {activeTab === "tracker" && (
-        <main>
+        {activeTab === "tracker" && (
           <ContextBar
             currentUser={currentUser}
             config={config}
             context={context}
             setContext={setContext}
           />
+        )}
+      </header>
+
+      {/* Main View Router */}
+      {activeTab === "tracker" && (
+        <main>
           <div className="max-w-[1700px] mx-auto px-4">
             <HeaderMetricsCards
               metrics={currentHeaderMetrics}
