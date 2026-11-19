@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon.jsx';
-import { hashPassword } from '../../utils/crypto.js';
 
 // --- Staff Form Modal ---
 export default function StaffFormModal({ user, users = [], config, showToast, onClose, onSave }) {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
-  const [password, setPassword] = useState(user?.password || "Pass@123");
+  const [password, setPassword] = useState(() => {
+    const raw = user?.password;
+    if (!raw || raw.startsWith("sha256:") || raw.startsWith("fb:")) {
+      return "Pass@123";
+    }
+    return raw;
+  });
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState(user?.role || "ASST");
   const [isAdmin, setIsAdmin] = useState(!!user?.isAdmin);
   const validCollegeIds = (config.colleges || []).map(c => c.id);
@@ -109,17 +115,14 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
       });
     }
 
-    let finalPassword = password.trim() || "Pass@123";
-    if (password !== user?.password && !finalPassword.startsWith("sha256:") && !finalPassword.startsWith("fb:")) {
-      finalPassword = await hashPassword(finalPassword);
-    }
+    const finalPassword = password.trim() || "Pass@123";
 
     const savedUser = {
       id: user?.id || `user_${Date.now()}`,
       name: name.trim(),
       email: email.trim(),
       password: finalPassword,
-      mustChangePassword: user ? (password !== user.password) : false,
+      mustChangePassword: user ? (password !== user.password ? false : (user.mustChangePassword || false)) : false,
       role,
       isAdmin,
       assignedColleges,
@@ -159,14 +162,34 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
-            <input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="e.g. Pass@123"
-              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded-xl font-mono"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block font-semibold text-slate-700 dark:text-slate-300">Password</label>
+              <button
+                type="button"
+                onClick={() => setPassword("Pass@123")}
+                className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Reset to default (Pass@123)
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="e.g. Pass@123"
+                className="w-full px-3 py-1.5 pr-9 bg-slate-50 dark:bg-slate-800 border rounded-xl font-mono text-slate-900 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                <Icon name={showPassword ? "eye-off" : "eye"} size={14} />
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1">Staff can sign in with this password directly.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

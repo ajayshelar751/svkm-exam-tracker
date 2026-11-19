@@ -972,7 +972,7 @@ export default function App() {
   };
 
   // Admin User operations
-  const handleSaveStaffUser = async (savedUser) => {
+  const handleSaveStaffUser = async (savedUser, successMsg) => {
     const exists = users.some(u => u.id === savedUser.id || (u.email && u.email.toLowerCase() === savedUser.email?.toLowerCase()));
     const nextUsers = exists
       ? users.map(u => (u.id === savedUser.id || u.email?.toLowerCase() === savedUser.email?.toLowerCase()) ? savedUser : u)
@@ -990,7 +990,7 @@ export default function App() {
         return;
       }
     }
-    showToast(`Staff account "${savedUser.name}" updated successfully.`, "success");
+    showToast(successMsg || `Staff account "${savedUser.name}" updated successfully.`, "success");
   };
 
   const handleDeleteStaffUser = (userId) => {
@@ -1021,8 +1021,7 @@ export default function App() {
     const target = users.find(u => u.id === userId);
     if (!target) return;
     const updated = { ...target, password: "Pass@123", mustChangePassword: true };
-    handleSaveStaffUser(updated);
-    showToast(`Password for ${target.name} reset to Pass@123`, "success");
+    handleSaveStaffUser(updated, `Password for ${target.name} reset to Pass@123`);
   };
 
   // Admin Activity operations
