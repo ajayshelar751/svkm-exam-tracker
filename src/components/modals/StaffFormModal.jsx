@@ -14,7 +14,20 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
     if (!user?.assignedColleges) return [];
     return user.assignedColleges.filter(id => id === 'ALL' || validCollegeIds.includes(id));
   });
-  const [assignedPrograms, setAssignedPrograms] = useState(user?.assignedPrograms || {});
+  const [assignedPrograms, setAssignedPrograms] = useState(() => {
+    const raw = user?.assignedPrograms || {};
+    const initial = {};
+    validCollegeIds.forEach(colId => {
+      if (raw[colId] && Array.isArray(raw[colId]) && raw[colId].length > 0) {
+        initial[colId] = raw[colId];
+      } else if (raw['ALL']?.includes('ALL')) {
+        initial[colId] = ['ALL'];
+      } else {
+        initial[colId] = ['ALL'];
+      }
+    });
+    return initial;
+  });
   const [active, setActive] = useState(user?.active !== false);
 
   // Institutional Rule: Only 1 Controller of Examination (COE) is allowed across the entire institution
@@ -35,7 +48,7 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
 
   const toggleCollegeProgAll = (colId, availableProgs) => {
     setAssignedPrograms(prev => {
-      const cur = prev[colId] || (prev['ALL']?.includes('ALL') ? ['ALL'] : ['ALL']);
+      const cur = (prev[colId] && prev[colId].length > 0) ? prev[colId] : ['ALL'];
       const next = { ...prev };
       if (cur.includes('ALL')) {
         next[colId] = [...availableProgs];
@@ -49,7 +62,7 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
   const toggleSpecificProgram = (colId, prog, availableProgs) => {
     setAssignedPrograms(prev => {
       const next = { ...prev };
-      let cur = next[colId] || (next['ALL']?.includes('ALL') ? ['ALL'] : ['ALL']);
+      let cur = (next[colId] && next[colId].length > 0) ? next[colId] : ['ALL'];
       if (cur.includes('ALL')) {
         cur = availableProgs.filter(p => p !== prog);
       } else if (cur.includes(prog)) {
@@ -84,13 +97,15 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
     if (assignedColleges.includes('ALL')) {
       cleanedPrograms['ALL'] = ['ALL'];
       config.colleges.forEach(c => {
-        if (assignedPrograms[c.id]) {
-          cleanedPrograms[c.id] = assignedPrograms[c.id];
-        }
+        cleanedPrograms[c.id] = (assignedPrograms[c.id] && assignedPrograms[c.id].length > 0)
+          ? assignedPrograms[c.id]
+          : ['ALL'];
       });
     } else {
       assignedColleges.forEach(colId => {
-        cleanedPrograms[colId] = assignedPrograms[colId] || ['ALL'];
+        cleanedPrograms[colId] = (assignedPrograms[colId] && assignedPrograms[colId].length > 0)
+          ? assignedPrograms[colId]
+          : ['ALL'];
       });
     }
 
@@ -233,7 +248,9 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
                   const colObj = config.colleges.find(c => c.id === colId);
                   const colName = colObj ? colObj.name : colId;
                   const availableProgs = config.programs[colId] || [];
-                  const curProgs = assignedPrograms[colId] || (assignedPrograms['ALL']?.includes('ALL') ? ['ALL'] : ['ALL']);
+                  const curProgs = (assignedPrograms[colId] && assignedPrograms[colId].length > 0)
+                    ? assignedPrograms[colId]
+                    : ['ALL'];
                   const isAll = curProgs.includes('ALL');
 
                   return (

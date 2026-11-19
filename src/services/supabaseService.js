@@ -328,6 +328,7 @@ export class SupabaseService {
           const hasAllCols = u.user_college_assignments?.some(a => a.is_all_colleges);
           if (hasAllCols) {
             assignedColleges = ['ALL'];
+            assignedPrograms['ALL'] = ['ALL'];
           } else {
             assignedColleges = (u.user_college_assignments || []).map(a => a.colleges?.code).filter(Boolean);
           }
@@ -1351,34 +1352,147 @@ export class SupabaseService {
 
   // --- Staff User Operations ---
   static async saveUserToCloud(client, user) {
-    if (!client || !user) return;
+    if (!client || !user) return { success: false, error: 'No client or user' };
     try {
-      const { data: dbUser, error } = await client.from('users').upsert({
-        legacy_id: user.id,
-        name: user.name,
-        email: user.email,
-        role_code: user.role,
-        is_admin: !!user.isAdmin,
-        is_active: user.active !== false,
-        must_change_password: !!user.mustChangePassword,
-        password_hash: user.password
-      }, { onConflict: 'email' }).select('id').single();
+      // 1. Resolve role_id from roles table
+      let roleId = null;
+      if (user.role) {
+        const { data: r } = await client.from('roles').select('id').eq('code', user.role).maybeSingle();
+        if (r) roleId = r.id;
+      }
 
-      if (!error && dbUser && user.assignedColleges) {
-        await client.from('user_college_assignments').delete().eq('user_id', dbUser.id);
+      // 2. Check if user already exists by email, legacy_id or id
+      let existingUser = null;
+      if (user.email) {
+        const { data: byEmail } = await client.from('users').select('id, legacy_id, email').eq('email', user.email).maybeSingle();
+        if (byEmail) existingUser = byEmail;
+      }
+      if (!existingUser && user.id) {
+        const { data: byId } = await client.from('users').select('id, legacy_id, email').or(`legacy_id.eq.${user.id},id.eq.${user.id}`).maybeSingle();
+        if (byId) existingUser = byId;
+      }
+
+      let dbUserId = null;
+
+      if (existingUser) {
+        // Safe UPDATE to prevent 409 unique constraint errors on legacy_id
+        dbUserId = existingUser.id;
+        const updatePayload = {
+          name: user.name,
+          role_code: user.role,
+          role_id: roleId,
+          is_admin: !!user.isAdmin,
+          is_active: user.active !== false,
+          must_change_password: !!user.mustChangePassword
+        };
+        if (user.password) {
+          updatePayload.password_hash = user.password;
+        }
+        const { error: uErr } = await client.from('users')
+          .update(updatePayload)
+          .eq('id', existingUser.id);
+        if (uErr) {
+          console.error("Error updating user in Supabase:", uErr);
+          return { success: false, error: uErr };
+        }
+      } else {
+        // Safe INSERT for brand-new staff user
+        const insertPayload = {
+          legacy_id: user.id || `user_${Date.now()}`,
+          name: user.name,
+          email: user.email,
+          role_code: user.role,
+          role_id: roleId,
+          is_admin: !!user.isAdmin,
+          is_active: user.active !== false,
+          must_change_password: !!user.mustChangePassword,
+          password_hash: user.password || "Pass@123"
+        };
+        const { data: inserted, error: iErr } = await client.from('users')
+          .insert(insertPayload)
+          .select('id')
+          .single();
+        if (iErr) {
+          console.error("Error inserting user in Supabase:", iErr);
+          return { success: false, error: iErr };
+        }
+        dbUserId = inserted?.id;
+      }
+
+      if (!dbUserId) return { success: false, error: 'Could not obtain user ID' };
+
+      // 3. Persist user_college_assignments
+      if (user.assignedColleges) {
+        await client.from('user_college_assignments').delete().eq('user_id', dbUserId);
         if (user.assignedColleges.includes('ALL')) {
-          await client.from('user_college_assignments').insert({ user_id: dbUser.id, is_all_colleges: true });
+          await client.from('user_college_assignments').insert({
+            user_id: dbUserId,
+            is_all_colleges: true
+          });
         } else {
-          for (const col of user.assignedColleges) {
-            const { data: c } = await client.from('colleges').select('id').eq('code', col).maybeSingle();
+          for (const colCode of user.assignedColleges) {
+            const { data: c } = await client.from('colleges').select('id').eq('code', colCode).maybeSingle();
             if (c) {
-              await client.from('user_college_assignments').insert({ user_id: dbUser.id, college_id: c.id, is_all_colleges: false });
+              await client.from('user_college_assignments').insert({
+                user_id: dbUserId,
+                college_id: c.id,
+                is_all_colleges: false
+              });
             }
           }
         }
       }
+
+      // 4. Persist user_program_assignments
+      if (user.assignedPrograms) {
+        await client.from('user_program_assignments').delete().eq('user_id', dbUserId);
+        for (const [colCode, progList] of Object.entries(user.assignedPrograms)) {
+          if (!Array.isArray(progList) || progList.length === 0) continue;
+
+          if (colCode === 'ALL') {
+            const { data: activeCols } = await client.from('colleges').select('id').eq('is_active', true);
+            for (const ac of (activeCols || [])) {
+              await client.from('user_program_assignments').insert({
+                user_id: dbUserId,
+                college_id: ac.id,
+                is_all_programs: true
+              });
+            }
+          } else {
+            const { data: c } = await client.from('colleges').select('id').eq('code', colCode).maybeSingle();
+            if (c) {
+              if (progList.includes('ALL')) {
+                await client.from('user_program_assignments').insert({
+                  user_id: dbUserId,
+                  college_id: c.id,
+                  is_all_programs: true
+                });
+              } else {
+                for (const pName of progList) {
+                  const { data: p } = await client.from('programs')
+                    .select('id')
+                    .eq('college_id', c.id)
+                    .eq('name', pName)
+                    .maybeSingle();
+                  if (p) {
+                    await client.from('user_program_assignments').insert({
+                      user_id: dbUserId,
+                      college_id: c.id,
+                      program_id: p.id,
+                      is_all_programs: false
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return { success: true };
     } catch (e) {
       console.warn("Failed to save user to Supabase:", e);
+      return { success: false, error: e };
     }
   }
 

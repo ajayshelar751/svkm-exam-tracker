@@ -972,16 +972,25 @@ export default function App() {
   };
 
   // Admin User operations
-  const handleSaveStaffUser = (savedUser) => {
-    const exists = users.some(u => u.id === savedUser.id);
-    const nextUsers = exists ? users.map(u => u.id === savedUser.id ? savedUser : u) : [...users, savedUser];
+  const handleSaveStaffUser = async (savedUser) => {
+    const exists = users.some(u => u.id === savedUser.id || (u.email && u.email.toLowerCase() === savedUser.email?.toLowerCase()));
+    const nextUsers = exists
+      ? users.map(u => (u.id === savedUser.id || u.email?.toLowerCase() === savedUser.email?.toLowerCase()) ? savedUser : u)
+      : [...users, savedUser];
     setUsers(nextUsers);
-    if (currentUser && currentUser.id === savedUser.id) {
+    if (currentUser && (currentUser.id === savedUser.id || currentUser.email?.toLowerCase() === savedUser.email?.toLowerCase())) {
       setCurrentUser(savedUser);
       localStorage.setItem('svkm_active_user', JSON.stringify(savedUser));
     }
     StorageService.saveLocalData({ config, users: nextUsers, activities, contexts });
-    StorageService.saveUserToCloud(dbRef.current, savedUser);
+    if (dbRef.current) {
+      const res = await StorageService.saveUserToCloud(dbRef.current, savedUser);
+      if (res && !res.success) {
+        showToast("Notice saving user to cloud: " + (res.error?.message || "Check network"), "warning");
+        return;
+      }
+    }
+    showToast(`Staff account "${savedUser.name}" updated successfully.`, "success");
   };
 
   const handleDeleteStaffUser = (userId) => {
