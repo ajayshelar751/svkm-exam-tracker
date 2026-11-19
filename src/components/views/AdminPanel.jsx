@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Icon from '../common/Icon.jsx';
 import StaffFormModal from '../modals/StaffFormModal.jsx';
 import ActivityFormModal from '../modals/ActivityFormModal.jsx';
@@ -98,7 +98,7 @@ export default function AdminPanel({
   const [newCollegeCode, setNewCollegeCode] = useState("");
   const [newBatch, setNewBatch] = useState("");
   const [newProgramName, setNewProgramName] = useState("");
-  const [progCollegeSelect, setProgCollegeSelect] = useState(config.colleges[0]?.id || "");
+  const [progCollegeSelect, setProgCollegeSelect] = useState(config?.colleges?.[0]?.id || "");
 
   // Filtered and sorted staff
   const filteredStaff = useMemo(() => {
@@ -585,12 +585,12 @@ export default function AdminPanel({
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3 flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span>Colleges ({config.colleges.length})</span>
+                <span>Colleges ({config?.colleges?.length || 0})</span>
                 <Icon name="building" size={16} className="text-indigo-600" />
               </h3>
 
               <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto pr-1">
-                {config.colleges.map(c => (
+                {(config?.colleges || []).map(c => (
                   editingCollegeId === c.id ? (
                     <div key={c.id} className="p-2 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800 space-y-2 text-xs">
                       <div className="flex gap-2">
@@ -731,14 +731,14 @@ export default function AdminPanel({
                   onChange={(e) => setProgCollegeSelect(e.target.value)}
                   className="text-xs bg-slate-50 dark:bg-slate-800 border rounded-lg px-2 py-1 font-bold"
                 >
-                  {config.colleges.map(c => (
+                  {(config?.colleges || []).map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
 
               <div className="space-y-1.5 mt-3 max-h-[260px] overflow-y-auto pr-1">
-                {(config.programs[progCollegeSelect] || []).map(p => (
+                {(config?.programs?.[progCollegeSelect] || []).map(p => (
                   editingProgName === p ? (
                     <div key={p} className="flex items-center gap-1.5 p-1.5 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800 text-xs">
                       <input
@@ -982,7 +982,7 @@ export default function AdminPanel({
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3 flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span>Academic Year Batches ({config.batches.length})</span>
+                <span>Academic Year Batches ({config?.batches?.length || 0})</span>
                 <Icon name="calendar" size={16} className="text-indigo-600" />
               </h3>
 
@@ -993,7 +993,7 @@ export default function AdminPanel({
                   <div className="text-[10px] text-indigo-600 dark:text-indigo-400">Default Batch for all users</div>
                 </div>
                 <select
-                  value={config.currentBatch || config.batches[0] || ""}
+                  value={config?.currentBatch || config?.batches?.[0] || ""}
                   onChange={(e) => {
                     const selectedBatch = e.target.value;
                     onSaveConfig({ ...config, currentBatch: selectedBatch });
@@ -1001,15 +1001,15 @@ export default function AdminPanel({
                   }}
                   className="px-2.5 py-1 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-lg font-mono font-bold text-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                 >
-                  {config.batches.map(b => (
+                  {(config?.batches || []).map(b => (
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
               </div>
 
               <div className="space-y-1.5 mt-3 max-h-[210px] overflow-y-auto pr-1">
-                {config.batches.map(b => {
-                  const isCurrent = (config.currentBatch || config.batches[0]) === b;
+                {(config?.batches || []).map(b => {
+                  const isCurrent = (config?.currentBatch || config?.batches?.[0]) === b;
                   return editingBatchVal === b ? (
                     <div key={b} className="flex items-center gap-1.5 p-1.5 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800 text-xs">
                       <input
