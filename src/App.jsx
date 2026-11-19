@@ -63,7 +63,7 @@ export default function App() {
     colleges: INITIAL_COLLEGES,
     programs: INITIAL_PROGRAMS,
     batches: INITIAL_BATCHES,
-    currentBatch: "2025-26",
+    currentBatch: "2026-27",
     phases: INITIAL_PHASES,
     semesters: INITIAL_SEMESTERS,
     examCycles: INITIAL_EXAM_CYCLES,
@@ -126,9 +126,9 @@ export default function App() {
 
   // Active Context
   const [context, setContext] = useState(() => ({
-    college: "NM",
-    batch: config.currentBatch || config.batches?.[0] || "2025-26",
-    program: "B.Com",
+    college: "NMC",
+    batch: "2026-27",
+    program: "45611 - B.Com.",
     semester: "Sem I",
     examCycle: "Regular"
   }));
@@ -149,21 +149,6 @@ export default function App() {
     let initialActivities = activities;
     let initialContexts = contexts;
 
-    const sampleKeys = new Set([
-      'NMC__2025-26__45611 - B.Com.__Sem I__Regular',
-      'NMC__2026-27__45611 - B.Com.__Sem I__Regular',
-      'NM__2025-26__B.Com__Sem I__Regular',
-      'NM__2026-27__B.Com__Sem I__Regular',
-      'NM__2026-27__45611 - B.Com.__Sem I__Regular',
-      'UPG__2026-27__53014 - B.A.(FT&NMP)__Sem I__Regular',
-      'NMC__2026-27__45614 - B.M.S.__Sem I__Regular'
-    ]);
-    const allowedStaffEmails = new Set([
-      'alka.shukla@svkm.ac.in',
-      'rupesh.mundada@svkm.ac.in',
-      'ajay.shelar@svkm.ac.in'
-    ]);
-
     if (local) {
       if (local.config) {
         const cln = { ...local.config, hideDemoLogins: true, examCycles: normalizeExamCycles(local.config.examCycles) };
@@ -171,7 +156,7 @@ export default function App() {
         setConfig(cln);
       }
       if (local.users) {
-        const cleanUsers = local.users.filter(u => allowedStaffEmails.has(u.email?.toLowerCase()));
+        const cleanUsers = local.users.filter(u => u.email?.toLowerCase().endsWith('@svkm.ac.in'));
         initialUsers = cleanUsers.length > 0 ? cleanUsers : INITIAL_USERS;
         setUsers(initialUsers);
       }
@@ -180,9 +165,10 @@ export default function App() {
         setActivities(local.activities);
       }
       if (local.contexts) {
+        // Sanitize local contexts: retain only active NMC/UPG uploaded sessions
         const cleanContexts = {};
         Object.entries(local.contexts).forEach(([k, v]) => {
-          if (!sampleKeys.has(k)) {
+          if (k.startsWith('NMC__') || k.startsWith('UPG__')) {
             cleanContexts[k] = v;
           }
         });
@@ -211,18 +197,13 @@ export default function App() {
       if (res.success && res.data) {
         if (res.data.config) setConfig({ ...res.data.config, hideDemoLogins: true, examCycles: normalizeExamCycles(res.data.config.examCycles) });
         if (res.data.users) {
-          const cleanUsers = res.data.users.filter(u => allowedStaffEmails.has(u.email?.toLowerCase()));
+          const cleanUsers = res.data.users.filter(u => u.email?.toLowerCase().endsWith('@svkm.ac.in'));
           setUsers(cleanUsers.length > 0 ? cleanUsers : initialUsers);
         }
         if (res.data.activities) setActivities(res.data.activities);
         if (res.data.contexts) {
-          const cleanCloudContexts = {};
-          Object.entries(res.data.contexts).forEach(([k, v]) => {
-            if (!sampleKeys.has(k)) {
-              cleanCloudContexts[k] = v;
-            }
-          });
-          setContexts(cleanCloudContexts);
+          // Pure Supabase Excel uploaded contexts
+          setContexts(res.data.contexts);
         }
         setCloudStatus("CONNECTED");
         setLastSyncTime(new Date());
@@ -698,31 +679,24 @@ export default function App() {
   // 1-Click Purge Sample / Prototype Contexts
   const handlePurgeSampleContexts = () => {
     showConfirm({
-      title: "Purge Prototype Sample Contexts",
-      message: "Are you sure you want to remove all 7 sample sessions and mock activity logs created during development? Real master data, users, and configuration will remain untouched.",
-      confirmText: "Purge Sample Data",
+      title: "Purge Stale & Sample Contexts",
+      message: "Are you sure you want to clean any lingering sample or non-Excel session contexts? Live Excel-uploaded cohorts will remain intact.",
+      confirmText: "Purge Stale Contexts",
       type: "danger",
       onConfirm: async () => {
-        const sampleKeys = new Set([
-          'NMC__2025-26__45611 - B.Com.__Sem I__Regular',
-          'NMC__2026-27__45611 - B.Com.__Sem I__Regular',
-          'NM__2025-26__B.Com__Sem I__Regular',
-          'NM__2026-27__B.Com__Sem I__Regular',
-          'NM__2026-27__45611 - B.Com.__Sem I__Regular',
-          'UPG__2026-27__53014 - B.A.(FT&NMP)__Sem I__Regular',
-          'NMC__2026-27__45614 - B.M.S.__Sem I__Regular'
-        ]);
-
         const nextContexts = {};
+        const keysToDelete = [];
         Object.entries(contexts).forEach(([k, v]) => {
-          if (!sampleKeys.has(k)) {
+          if ((k.startsWith('NMC__') || k.startsWith('UPG__')) && (v?.headerMetrics?.totalStudents > 0 || v?.headerMetrics?.isUploadedFromExcel)) {
             nextContexts[k] = v;
+          } else {
+            keysToDelete.push(k);
           }
         });
 
-        if (dbRef.current) {
+        if (dbRef.current && keysToDelete.length > 0) {
           try {
-            await dbRef.current.from('exam_sessions').delete().in('context_key', Array.from(sampleKeys));
+            await dbRef.current.from('exam_sessions').delete().in('context_key', keysToDelete);
           } catch(e) {
             console.warn("Notice while deleting sample sessions in cloud:", e);
           }
@@ -730,7 +704,7 @@ export default function App() {
 
         setContexts(nextContexts);
         StorageService.saveLocalData({ config, users, activities, contexts: nextContexts });
-        showToast("All sample contexts and mock activity logs purged successfully!", "success");
+        showToast("Purged stale contexts. Only pure Excel sessions remain!", "success");
       }
     });
   };
@@ -1097,7 +1071,7 @@ export default function App() {
             colleges: INITIAL_COLLEGES,
             programs: INITIAL_PROGRAMS,
             batches: INITIAL_BATCHES,
-            currentBatch: "2025-26",
+            currentBatch: "2026-27",
             phases: INITIAL_PHASES,
             semesters: INITIAL_SEMESTERS,
             examCycles: INITIAL_EXAM_CYCLES,

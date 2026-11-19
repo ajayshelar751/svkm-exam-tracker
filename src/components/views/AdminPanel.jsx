@@ -63,7 +63,12 @@ export default function AdminPanel({
   const [editingUser, setEditingUser] = useState(null);
   const [isAddingUser, setIsAddingUser] = useState(false);
 
-  // Student Scope Statistics per Staff Member
+  // Auto-sync batch filter if currently on obsolete batch
+  useEffect(() => {
+    if (config?.currentBatch && (staffBatchFilter === '2025-26' || !staffBatchFilter)) {
+      setStaffBatchFilter(config.currentBatch);
+    }
+  }, [config?.currentBatch]);
   const staffStudentStats = useMemo(() => {
     const statsMap = {};
     (users || []).forEach(u => {

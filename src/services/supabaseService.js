@@ -566,7 +566,10 @@ export class SupabaseService {
             };
           });
 
-          contexts = { ...contexts, ...nextContexts };
+          // Single source of truth: contexts reflect pure database state
+          contexts = nextContexts;
+        } else if (!sErr && Array.isArray(dbSessions) && dbSessions.length === 0) {
+          contexts = {};
         }
       } catch (ctxErr) {
         console.warn("Supabase contexts sync notice:", ctxErr);

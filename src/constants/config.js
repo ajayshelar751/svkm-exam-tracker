@@ -1,67 +1,49 @@
 export const INITIAL_COLLEGES = [
   {
-    "id": "NM",
-    "name": "NM College",
-    "code": "NM"
+    "id": "NMC",
+    "name": "Narsee Monjee College",
+    "code": "NMC"
   },
   {
     "id": "UPG",
-    "name": "UPG College",
+    "name": "Usha Pravin Gandhi College",
     "code": "UPG"
-  },
-  {
-    "id": "MITHIBAI",
-    "name": "Mithibai College",
-    "code": "MITHIBAI"
-  },
-  {
-    "id": "DJSCE",
-    "name": "D.J. Sanghvi College",
-    "code": "DJSCE"
   }
 ];
-    export const INITIAL_PROGRAMS = {
-  "NM": [
-    "B.Com",
-    "B.Com (Hons)",
-    "BMS",
-    "BAF",
-    "BFM",
-    "B.Sc. Finance",
-    "B.Sc. Economics",
-    "M.Com"
+
+export const INITIAL_PROGRAMS = {
+  "NMC": [
+    "45611 - B.Com.",
+    "45612 - B.Com.(FM)",
+    "45613 - B.Com.(A&F)",
+    "45614 - B.M.S.",
+    "45615 - B.Com.(M&F)",
+    "45616 - B.Com.(Eco)",
+    "45617 - B.Com.(Eco&Ana)",
+    "45618 - B.Sc.(IT)",
+    "45619 - B.Sc.(AI&DA)",
+    "45620 - B.Com.(MS)",
+    "45621 - B.Com.(C&M)",
+    "45701 - M.Com.(AA)",
+    "45702 - M.Com.(B&F)",
+    "45703 - M.Com.(BM)"
   ],
   "UPG": [
-    "BMS",
-    "BAMMC",
-    "B.Sc. IT",
-    "B.Sc. Data Science",
-    "M.A.CJ",
-    "M.Sc. IT"
-  ],
-  "MITHIBAI": [
-    "B.A.",
-    "B.Sc.",
-    "B.Com",
-    "BMS",
-    "BAF",
-    "BAMMC",
-    "B.Sc. Comp Sci",
-    "B.Sc. Biotech",
-    "M.Sc.",
-    "M.A.",
-    "M.Com"
-  ],
-  "DJSCE": [
-    "B.Tech Computer",
-    "B.Tech IT",
-    "B.Tech EXTC",
-    "B.Tech AI & DS",
-    "B.Tech Mechanical",
-    "M.Tech"
+    "53011 - B.A.(MMC)",
+    "53012 - B.M.S.",
+    "53013 - B.Sc.(IT)",
+    "53014 - B.A.(FT&NMP)",
+    "53015 - B.Com.(MS)",
+    "53016 - B.Sc.(AI&DS)",
+    "53021 - M.Sc.(IT)",
+    "53022 - M.A.(EMA)",
+    "53023 - M.Com.(BM)",
+    "53024 - M.A.(MC-FTNM)",
+    "53026 - M.Sc.(AI&DS)"
   ]
 };
-    export const INITIAL_BATCHES = [
+
+export const INITIAL_BATCHES = [
   "2024-25",
   "2025-26",
   "2026-27",
