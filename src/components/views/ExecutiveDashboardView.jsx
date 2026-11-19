@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../common/Icon.jsx';
 import { INITIAL_PHASES } from '../../constants/config.js';
-import { ROLE_RANKS } from '../../constants/roles.js';
+import { ROLE_RANKS, ROLE_LABELS } from '../../constants/roles.js';
 import {
   isActivityApplicableForCycle,
   computeActivityStatus,
   formatExamMonthYear,
-  formatDateDisplay
+  formatDateDisplay,
+  computeStaffDashboardMetrics
 } from '../../utils/helpers.js';
 import { exportExecutiveDashboardExcel } from '../../utils/excelExport.js';
 
@@ -15,6 +16,7 @@ export default function ExecutiveDashboardView({
   activities,
   contexts = {},
   config,
+  users = [],
   onNavigateToContextPhase,
   onNavigateToContext
 }) {
@@ -26,6 +28,14 @@ export default function ExecutiveDashboardView({
   const [sortField, setSortField] = useState("college");
   const [sortAsc, setSortAsc] = useState(true);
 
+  // Staff-Wise Analysis States
+  const [staffSearch, setStaffSearch] = useState("");
+  const [staffRoleFilter, setStaffRoleFilter] = useState("ALL");
+  const [staffSortField, setStaffSortField] = useState("roleRank");
+  const [staffSortAsc, setStaffSortAsc] = useState(false);
+  const [expandedStaffId, setExpandedStaffId] = useState(null);
+  const [staffDetailTab, setStaffDetailTab] = useState("pending");
+
   // Reset Filters
   const handleResetFilters = () => {
     setDashBatch(config.currentBatch || "ALL");
@@ -33,6 +43,8 @@ export default function ExecutiveDashboardView({
     setDashCycle("ALL");
     setDashSem("ALL");
     setTableSearch("");
+    setStaffSearch("");
+    setStaffRoleFilter("ALL");
   };
 
   const allPhases = useMemo(() => {
@@ -274,12 +286,109 @@ export default function ExecutiveDashboardView({
     }
   };
 
+  // Compute staff metrics respecting all active dashboard filters
+  const staffMetrics = useMemo(() => {
+    return computeStaffDashboardMetrics(users, activities, contexts, config, {
+      batchFilter: dashBatch,
+      collegeFilter: dashCollege,
+      cycleFilter: dashCycle,
+      semFilter: dashSem
+    });
+  }, [users, activities, contexts, config, dashBatch, dashCollege, dashCycle, dashSem]);
+
+  // Filtered and Sorted Staff Metrics
+  const filteredAndSortedStaff = useMemo(() => {
+    let list = (staffMetrics || []).filter(st => {
+      // Role tier filter
+      if (staffRoleFilter === "LEADERSHIP") {
+        if (!['COE', 'DY_COE'].includes(st.role)) return false;
+      } else if (staffRoleFilter === "OFFICERS") {
+        if (!['AR', 'COORD'].includes(st.role)) return false;
+      } else if (staffRoleFilter === "ASSISTANTS") {
+        if (!['ASST_COORD', 'ASST'].includes(st.role)) return false;
+      } else if (staffRoleFilter !== "ALL" && st.role !== staffRoleFilter) {
+        return false;
+      }
+
+      // Search text
+      if (staffSearch.trim()) {
+        const q = staffSearch.toLowerCase().trim();
+        const roleLabel = (ROLE_LABELS[st.role] || '').toLowerCase();
+        return (
+          st.name.toLowerCase().includes(q) ||
+          st.email.toLowerCase().includes(q) ||
+          st.role.toLowerCase().includes(q) ||
+          roleLabel.includes(q)
+        );
+      }
+      return true;
+    });
+
+    list.sort((a, b) => {
+      let vA, vB;
+      if (staffSortField === 'roleRank') {
+        vA = ROLE_RANKS[a.role] ?? -1;
+        vB = ROLE_RANKS[b.role] ?? -1;
+      } else if (staffSortField === 'name') {
+        vA = a.name.toLowerCase();
+        vB = b.name.toLowerCase();
+        return staffSortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
+      } else {
+        vA = a[staffSortField] ?? 0;
+        vB = b[staffSortField] ?? 0;
+      }
+      return staffSortAsc ? vA - vB : vB - vA;
+    });
+
+    return list;
+  }, [staffMetrics, staffRoleFilter, staffSearch, staffSortField, staffSortAsc]);
+
+  // Aggregate Staff KPI Summary
+  const staffSummary = useMemo(() => {
+    const totalStaff = filteredAndSortedStaff.length;
+    let sumCompleted = 0;
+    let sumAssigned = 0;
+    let sumPending = 0;
+    let sumQueries = 0;
+    let maxStudentsScope = 0;
+
+    filteredAndSortedStaff.forEach(st => {
+      sumCompleted += st.totalCompleted;
+      sumAssigned += st.totalAssigned;
+      sumPending += st.totalPending;
+      sumQueries += st.openQueries;
+      if (st.totalStudents > maxStudentsScope) maxStudentsScope = st.totalStudents;
+    });
+
+    const avgRate = sumAssigned > 0 ? Math.round((sumCompleted / sumAssigned) * 100) : 100;
+
+    return {
+      totalStaff,
+      sumCompleted,
+      sumAssigned,
+      sumPending,
+      sumQueries,
+      avgRate,
+      maxStudentsScope
+    };
+  }, [filteredAndSortedStaff]);
+
+  const handleStaffSort = (field) => {
+    if (staffSortField === field) {
+      setStaffSortAsc(!staffSortAsc);
+    } else {
+      setStaffSortField(field);
+      setStaffSortAsc(field === 'name'); // default asc for name, desc for numeric metrics
+    }
+  };
+
   const handleExportFiltered = () => {
     exportExecutiveDashboardExcel(
       filteredAndSortedSessions,
       summary,
       { batch: dashBatch, college: dashCollege, cycle: dashCycle, sem: dashSem },
-      config
+      config,
+      staffMetrics
     );
   };
 
@@ -532,6 +641,643 @@ export default function ExecutiveDashboardView({
                   );
                 });
               })()}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* NEW SECTION: Staff Performance & Workload Analysis */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Icon name="users" size={16} className="text-indigo-600 dark:text-indigo-400" />
+              <span>Staff Performance &amp; Workload Analysis</span>
+              <span className="text-[10px] font-normal text-slate-400">
+                ({filteredAndSortedStaff.length} Officers in Scope)
+              </span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Workload distribution, student coverage, and pending action backlog mapped to assigned examination personnel
+            </p>
+          </div>
+
+          {/* Quick Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search staff, role, email..."
+                value={staffSearch}
+                onChange={(e) => setStaffSearch(e.target.value)}
+                className="pl-7 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-52"
+              />
+              <span className="absolute left-2.5 top-2 text-slate-400">
+                <Icon name="search" size={12} />
+              </span>
+              {staffSearch && (
+                <button
+                  onClick={() => setStaffSearch("")}
+                  className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Role Filter */}
+            <select
+              value={staffRoleFilter}
+              onChange={(e) => setStaffRoleFilter(e.target.value)}
+              className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+            >
+              <option value="ALL">All Roles</option>
+              <option value="LEADERSHIP">Leadership (COE, DY_COE)</option>
+              <option value="OFFICERS">Officers (AR, COORD)</option>
+              <option value="ASSISTANTS">Assistants (ASST_COORD, ASST)</option>
+              <option value="COE">COE</option>
+              <option value="DY_COE">DY_COE</option>
+              <option value="AR">AR</option>
+              <option value="COORD">COORD</option>
+              <option value="ASST_COORD">ASST_COORD</option>
+              <option value="ASST">ASST</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Staff Summary KPI Chips */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Staff</div>
+              <div className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">{staffSummary.totalStaff}</div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+              <Icon name="users" size={14} />
+            </div>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Completion</div>
+              <div className="text-base font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">{staffSummary.avgRate}%</div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+              <Icon name="check-circle" size={14} />
+            </div>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tasks Executed</div>
+              <div className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                {staffSummary.sumCompleted} <span className="text-[10px] font-normal text-slate-400">/ {staffSummary.sumAssigned}</span>
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+              <Icon name="activity" size={14} />
+            </div>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Action</div>
+              <div className="text-base font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">{staffSummary.sumPending}</div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+              <Icon name="clock" size={14} />
+            </div>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between col-span-2 sm:col-span-1">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Open Queries</div>
+              <div className="text-base font-extrabold text-rose-600 dark:text-rose-400 mt-0.5">{staffSummary.sumQueries}</div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
+              <Icon name="alert-circle" size={14} />
+            </div>
+          </div>
+        </div>
+
+        {/* Staff Table */}
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700 select-none">
+                <th
+                  onClick={() => handleStaffSort('name')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Staff Officer</span>
+                    {staffSortField === 'name' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('roleRank')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Role &amp; Tier</span>
+                    {staffSortField === 'roleRank' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th className="py-2.5 px-3">Assigned Scope</th>
+                <th
+                  onClick={() => handleStaffSort('totalStudents')}
+                  className="py-2.5 px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Students</span>
+                    {staffSortField === 'totalStudents' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('totalAssigned')}
+                  className="py-2.5 px-3 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Tasks</span>
+                    {staffSortField === 'totalAssigned' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('totalCompleted')}
+                  className="py-2.5 px-3 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Completed</span>
+                    {staffSortField === 'totalCompleted' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('makerPending')}
+                  className="py-2.5 px-3 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                  title="Tasks waiting for this staff to execute"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Pending Maker</span>
+                    {staffSortField === 'makerPending' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('verifierPending')}
+                  className="py-2.5 px-3 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                  title="Tasks waiting for this staff to sign off"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Pending Verify</span>
+                    {staffSortField === 'verifierPending' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('openQueries')}
+                  className="py-2.5 px-3 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Queries</span>
+                    {staffSortField === 'openQueries' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleStaffSort('completionRate')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-slate-900 dark:hover:text-white"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Progress</span>
+                    {staffSortField === 'completionRate' && (
+                      <span className="text-indigo-600">{staffSortAsc ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th className="py-2.5 px-3 text-center">Status</th>
+                <th className="py-2.5 px-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+              {filteredAndSortedStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={12} className="py-8 text-center text-slate-400">
+                    No staff members match the selected filters or search query.
+                  </td>
+                </tr>
+              ) : (
+                filteredAndSortedStaff.map(st => {
+                  const isExpanded = expandedStaffId === st.id;
+                  const roleBadgeClass = {
+                    COE: "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+                    DY_COE: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+                    AR: "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+                    COORD: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800",
+                    ASST_COORD: "bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-800",
+                    ASST: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                  }[st.role] || "bg-slate-100 text-slate-700";
+
+                  const statusConfig = {
+                    ON_TRACK: {
+                      label: "ON TRACK",
+                      cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+                    },
+                    IN_PROGRESS: {
+                      label: "IN PROGRESS",
+                      cls: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                    },
+                    CRITICAL: {
+                      label: "ATTENTION",
+                      cls: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border-rose-200 dark:border-rose-800"
+                    },
+                    NO_TASKS: {
+                      label: "NO TASKS",
+                      cls: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                    }
+                  }[st.ragStatus] || { label: st.ragStatus, cls: "bg-slate-100 text-slate-500" };
+
+                  return (
+                    <React.Fragment key={st.id}>
+                      <tr className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${isExpanded ? 'bg-indigo-50/30 dark:bg-indigo-950/20' : ''}`}>
+                        {/* Name & Email */}
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                              {st.name?.charAt(0) || 'U'}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                                <span>{st.name}</span>
+                                {st.isAdmin && (
+                                  <span className="text-[9px] px-1 py-0.2 bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 rounded font-semibold">
+                                    ADMIN
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-400 truncate">{st.email}</div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Role */}
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${roleBadgeClass}`}>
+                            {st.role}
+                          </span>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {ROLE_LABELS[st.role] || st.role}
+                          </div>
+                        </td>
+
+                        {/* Scope */}
+                        <td className="py-2.5 px-3">
+                          <div className="flex flex-wrap items-center gap-1">
+                            {st.isGlobal ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold border border-purple-200 dark:border-purple-800">
+                                Global (All)
+                              </span>
+                            ) : (
+                              (st.accessibleColleges || []).map(cid => (
+                                <span key={cid} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200 dark:border-blue-800">
+                                  {cid}
+                                </span>
+                              ))
+                            )}
+                            <span className="text-[10px] text-slate-400">
+                              ({st.cohortCount} {st.cohortCount === 1 ? 'cohort' : 'cohorts'})
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Students */}
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                          <div>{st.totalStudents.toLocaleString()}</div>
+                          {st.totalStudents > 0 && Object.keys(st.byCollege || {}).length > 1 && (
+                            <div className="text-[9px] font-normal text-slate-400">
+                              {Object.entries(st.byCollege)
+                                .filter(([, cnt]) => cnt > 0)
+                                .map(([col, cnt]) => `${col}: ${cnt}`)
+                                .join(' | ')}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Tasks Assigned */}
+                        <td className="py-2.5 px-3 text-center font-mono text-slate-600 dark:text-slate-300">
+                          {st.totalAssigned}
+                        </td>
+
+                        {/* Tasks Completed */}
+                        <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          {st.totalCompleted}
+                        </td>
+
+                        {/* Pending Maker */}
+                        <td className="py-2.5 px-3 text-center">
+                          {st.makerPending > 0 ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                              {st.makerPending}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-600">—</span>
+                          )}
+                        </td>
+
+                        {/* Pending Verifier */}
+                        <td className="py-2.5 px-3 text-center">
+                          {st.verifierPending > 0 ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                              {st.verifierPending}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-600">—</span>
+                          )}
+                        </td>
+
+                        {/* Queries */}
+                        <td className="py-2.5 px-3 text-center">
+                          {st.openQueries > 0 ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                              {st.openQueries}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-600">—</span>
+                          )}
+                        </td>
+
+                        {/* Progress */}
+                        <td className="py-2.5 px-3">
+                          <div className="w-24">
+                            <div className="flex items-center justify-between text-[10px] font-mono font-bold mb-0.5">
+                              <span>{st.completionRate}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  st.completionRate >= 80 ? 'bg-emerald-500' :
+                                  st.completionRate >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                                }`}
+                                style={{ width: `${Math.min(100, st.completionRate)}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-2.5 px-3 text-center">
+                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-extrabold border ${statusConfig.cls}`}>
+                            {statusConfig.label}
+                          </span>
+                        </td>
+
+                        {/* Action */}
+                        <td className="py-2.5 px-3 text-right">
+                          <button
+                            onClick={() => setExpandedStaffId(isExpanded ? null : st.id)}
+                            className={`px-2.5 py-1 text-xs rounded-lg font-semibold transition flex items-center gap-1 ml-auto ${
+                              isExpanded
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            <span>{isExpanded ? "Close" : "Details"}</span>
+                            <span>{isExpanded ? "▲" : "▼"}</span>
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Expandable Drill-Down Row */}
+                      {isExpanded && (
+                        <tr className="bg-indigo-50/40 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/40">
+                          <td colSpan={12} className="p-4">
+                            <div className="space-y-3">
+                              {/* Drilldown Navigation Tabs */}
+                              <div className="flex items-center gap-2 border-b border-indigo-200/60 dark:border-indigo-800/60 pb-2">
+                                <button
+                                  onClick={() => setStaffDetailTab("pending")}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                                    staffDetailTab === "pending"
+                                      ? "bg-indigo-600 text-white shadow"
+                                      : "text-slate-600 dark:text-slate-300 hover:bg-indigo-100/50"
+                                  }`}
+                                >
+                                  <Icon name="clock" size={13} />
+                                  <span>Pending Tasks ({st.totalPending})</span>
+                                </button>
+
+                                <button
+                                  onClick={() => setStaffDetailTab("queries")}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                                    staffDetailTab === "queries"
+                                      ? "bg-indigo-600 text-white shadow"
+                                      : "text-slate-600 dark:text-slate-300 hover:bg-indigo-100/50"
+                                  }`}
+                                >
+                                  <Icon name="alert-circle" size={13} />
+                                  <span>Open Queries ({st.openQueries})</span>
+                                </button>
+
+                                <button
+                                  onClick={() => setStaffDetailTab("scope")}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                                    staffDetailTab === "scope"
+                                      ? "bg-indigo-600 text-white shadow"
+                                      : "text-slate-600 dark:text-slate-300 hover:bg-indigo-100/50"
+                                  }`}
+                                >
+                                  <Icon name="book-open" size={13} />
+                                  <span>Assigned Scope &amp; Programs</span>
+                                </button>
+                              </div>
+
+                              {/* Tab Content 1: Pending Tasks */}
+                              {staffDetailTab === "pending" && (
+                                <div className="space-y-2">
+                                  {st.totalPending === 0 ? (
+                                    <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                                      🎉 Excellent! All assigned maker tasks and verifications for <span className="font-bold text-slate-700 dark:text-slate-200">{st.name}</span> are fully up to date.
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                      {/* Pending Maker */}
+                                      {st.pendingMakerTasks.map((t, idx) => (
+                                        <div
+                                          key={`maker_${idx}`}
+                                          className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-amber-200 dark:border-amber-900/50 shadow-sm flex flex-col justify-between gap-2"
+                                        >
+                                          <div>
+                                            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+                                              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                                MAKER ACTION REQUIRED
+                                              </span>
+                                              <span className="text-slate-400">{t.colId} • {t.sem}</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                                              {t.activityName}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                                              {t.program} ({t.cycle})
+                                            </div>
+                                            <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold mt-0.5">
+                                              {t.phase}
+                                            </div>
+                                          </div>
+                                          <button
+                                            onClick={() => onNavigateToContextPhase && onNavigateToContextPhase(t.ctxKey, t.phase)}
+                                            className="w-full mt-1 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
+                                          >
+                                            <Icon name="external-link" size={11} />
+                                            <span>Open in Tracker</span>
+                                          </button>
+                                        </div>
+                                      ))}
+
+                                      {/* Pending Verifier */}
+                                      {st.pendingVerifierTasks.map((t, idx) => (
+                                        <div
+                                          key={`verif_${idx}`}
+                                          className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-900/50 shadow-sm flex flex-col justify-between gap-2"
+                                        >
+                                          <div>
+                                            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+                                              <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                                VERIFICATION PENDING
+                                              </span>
+                                              <span className="text-slate-400">{t.colId} • {t.sem}</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                                              {t.activityName}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                                              {t.program} ({t.cycle})
+                                            </div>
+                                            <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold mt-0.5">
+                                              {t.phase}
+                                            </div>
+                                          </div>
+                                          <button
+                                            onClick={() => onNavigateToContextPhase && onNavigateToContextPhase(t.ctxKey, t.phase)}
+                                            className="w-full mt-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
+                                          >
+                                            <Icon name="check-square" size={11} />
+                                            <span>Verify in Tracker</span>
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Tab Content 2: Open Queries */}
+                              {staffDetailTab === "queries" && (
+                                <div className="space-y-2">
+                                  {st.openQueries === 0 ? (
+                                    <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                                      No open queries or discrepancy flags in {st.name}'s cohorts.
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                      {st.activeQueryTasks.map((q, idx) => (
+                                        <div
+                                          key={`query_${idx}`}
+                                          className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-rose-200 dark:border-rose-900/50 shadow-sm flex flex-col justify-between gap-2"
+                                        >
+                                          <div>
+                                            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+                                              <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                                QUERY FLAGGED
+                                              </span>
+                                              <span className="text-slate-400">{q.colId} • {q.sem} • {q.cycle}</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-slate-900 dark:text-white">
+                                              {q.activityName}
+                                            </div>
+                                            <div className="text-[10px] text-slate-600 dark:text-slate-300 mt-1 italic bg-rose-50/50 dark:bg-rose-950/20 p-2 rounded-lg border border-rose-100 dark:border-rose-900/30">
+                                              "{q.query.text || 'Clarification requested on activity metrics.'}"
+                                            </div>
+                                            <div className="text-[9px] text-slate-400 mt-1">
+                                              Raised by {q.query.raisedBy || 'Staff'} on {q.query.raisedDate || 'N/A'}
+                                            </div>
+                                          </div>
+                                          <button
+                                            onClick={() => onNavigateToContextPhase && onNavigateToContextPhase(q.ctxKey, q.phase)}
+                                            className="w-full mt-1 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
+                                          >
+                                            <Icon name="message-square" size={11} />
+                                            <span>Resolve Query in Tracker</span>
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Tab Content 3: Assigned Scope & Programs */}
+                              {staffDetailTab === "scope" && (
+                                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    <Icon name="award" size={14} className="text-indigo-600" />
+                                    <span>Program Scope &amp; College Permissions</span>
+                                  </div>
+                                  {st.isGlobal ? (
+                                    <div className="text-slate-600 dark:text-slate-300 text-xs">
+                                      <span className="font-bold text-purple-600">Global Administration Scope:</span> {st.name} holds oversight across all SVKM colleges and all academic degree programs ({st.totalStudents.toLocaleString()} total students across {st.cohortCount} active cohorts).
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      {Object.entries(st.user.assignedPrograms || {}).map(([colId, progs]) => (
+                                        <div key={colId} className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                          <div className="font-bold text-slate-800 dark:text-slate-200 text-xs mb-1 flex items-center justify-between">
+                                            <span>College: {colId}</span>
+                                            <span className="text-[10px] text-slate-400 font-mono">
+                                              {st.byCollege?.[colId]?.toLocaleString() || 0} Students
+                                            </span>
+                                          </div>
+                                          <div className="flex flex-wrap gap-1">
+                                            {Array.isArray(progs) && progs.includes("ALL") ? (
+                                              <span className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                                                All Programs in {colId}
+                                              </span>
+                                            ) : Array.isArray(progs) && progs.length > 0 ? (
+                                              progs.map(p => (
+                                                <span key={p} className="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-medium border border-indigo-100 dark:border-indigo-900">
+                                                  {p}
+                                                </span>
+                                              ))
+                                            ) : (
+                                              <span className="text-slate-400 text-[10px]">No programs explicitly assigned</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

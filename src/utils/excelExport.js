@@ -235,7 +235,7 @@ function exportFullDatabaseExcel(activities, contexts, config, users) {
   XLSX.writeFile(wb, `SVKM_Exam_Tracker_MultiCollege_Database_${getTodayYYYYMMDD()}.xlsx`);
 }
 
-export function exportExecutiveDashboardExcel(filteredSessions, summary, filterState, config) {
+export function exportExecutiveDashboardExcel(filteredSessions, summary, filterState, config, staffMetrics = []) {
   const xlsxLib = (XLSX && XLSX.utils) ? XLSX : window.XLSX;
   if (!xlsxLib) {
     if (window.showPortalToast) window.showPortalToast("SheetJS library is still loading. Please try again in a moment.", "warning");
@@ -304,6 +304,42 @@ export function exportExecutiveDashboardExcel(filteredSessions, summary, filterS
   });
   const wsSessions = XLSX.utils.aoa_to_sheet(sessionRows);
   XLSX.utils.book_append_sheet(wb, wsSessions, "Detailed_Status_Report");
+
+  // Sheet 3: Staff_Performance_Analysis
+  if (Array.isArray(staffMetrics) && staffMetrics.length > 0) {
+    const staffRows = [
+      [
+        "Staff Name", "Email", "Role", "Admin", "Assigned Colleges",
+        "Students in Scope", "Cohorts in Scope", "Total Tasks Assigned",
+        "Tasks Completed", "Pending Maker Tasks", "Pending Verifications",
+        "Total Pending", "Active Queries", "Completion %", "RAG Status"
+      ]
+    ];
+
+    staffMetrics.forEach(st => {
+      const colList = (st.accessibleColleges || []).join(', ') || 'ALL';
+      staffRows.push([
+        st.name,
+        st.email,
+        st.role,
+        st.isAdmin ? "Yes" : "No",
+        colList,
+        st.totalStudents,
+        st.cohortCount,
+        st.totalAssigned,
+        st.totalCompleted,
+        st.makerPending,
+        st.verifierPending,
+        st.totalPending,
+        st.openQueries,
+        `${st.completionRate}%`,
+        st.ragStatus
+      ]);
+    });
+
+    const wsStaff = XLSX.utils.aoa_to_sheet(staffRows);
+    XLSX.utils.book_append_sheet(wb, wsStaff, "Staff_Performance_Analysis");
+  }
 
   XLSX.writeFile(wb, `SVKM_Executive_Exam_Report_${getTodayYYYYMMDD()}.xlsx`);
 }

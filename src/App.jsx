@@ -1443,6 +1443,7 @@ export default function App() {
             activities={activities}
             contexts={allContextsWithActive}
             config={config}
+            users={users}
             onNavigateToContextPhase={handleNavigateToContextPhase}
             onNavigateToContext={handleNavigateToContext}
           />
