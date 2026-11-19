@@ -69,10 +69,7 @@ def generate_sql(data):
     college_meta = {
         'NM': ('NM College', 'Narsee Monjee College of Commerce and Economics'),
         'NMC': ('Narsee Monjee College', 'Narsee Monjee College of Commerce and Economics'),
-        'UPG': ('UPG College', 'Usha Pravin Gandhi College of Arts, Science and Commerce'),
-        'MBC': ('Mithibai College', 'Mithibai College of Arts, Chauhan Institute of Science'),
-        'MITHIBAI': ('Mithibai College', 'Mithibai College of Arts, Chauhan Institute of Science'),
-        'DJSCE': ('D.J. Sanghvi College', 'Dwarkadas J. Sanghvi College of Engineering')
+        'UPG': ('UPG College', 'Usha Pravin Gandhi College of Arts, Science and Commerce')
     }
     for c in data['config'].get('colleges', []):
         code = c['code']

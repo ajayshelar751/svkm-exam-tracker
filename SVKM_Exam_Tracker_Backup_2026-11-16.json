@@ -19,53 +19,9 @@
         "id": "UPG",
         "name": "Usha Pravin Gandhi College",
         "code": "UPG"
-      },
-      {
-        "code": "MBC",
-        "name": "Mithibai College",
-        "id": "MBC"
-      },
-      {
-        "id": "DJSCE",
-        "name": "D.J. Sanghvi College",
-        "code": "DJSCE"
       }
     ],
     "programs": {
-      "MITHIBAI": [
-        "B.A.",
-        "B.Sc.",
-        "B.Com",
-        "BMS",
-        "BAF",
-        "BAMMC",
-        "B.Sc. Comp Sci",
-        "B.Sc. Biotech",
-        "M.Sc.",
-        "M.A.",
-        "M.Com"
-      ],
-      "DJSCE": [
-        "B.Tech Computer",
-        "B.Tech IT",
-        "B.Tech EXTC",
-        "B.Tech AI & DS",
-        "B.Tech Mechanical",
-        "M.Tech"
-      ],
-      "MBC": [
-        "B.A.",
-        "B.Sc.",
-        "B.Com",
-        "BMS",
-        "BAF",
-        "BAMMC",
-        "B.Sc. Comp Sci",
-        "B.Sc. Biotech",
-        "M.Sc.",
-        "M.A.",
-        "M.Com"
-      ],
       "NMC": [
         "45611 - B.Com.",
         "45612 - B.Com.(FM)",

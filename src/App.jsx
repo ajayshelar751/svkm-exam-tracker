@@ -152,11 +152,32 @@ export default function App() {
     if (local) {
       if (local.config) {
         const cln = { ...local.config, hideDemoLogins: true, examCycles: normalizeExamCycles(local.config.examCycles) };
+        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
+        if (Array.isArray(cln.colleges)) {
+          cln.colleges = cln.colleges.filter(c => !PURGED_COLLEGES.has(c.id) && !PURGED_COLLEGES.has(c.code));
+        }
+        if (cln.programs && typeof cln.programs === 'object') {
+          PURGED_COLLEGES.forEach(code => delete cln.programs[code]);
+        }
         initialConfig = cln;
         setConfig(cln);
       }
       if (local.users) {
-        const cleanUsers = local.users.filter(u => u.email?.toLowerCase().endsWith('@svkm.ac.in'));
+        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
+        const cleanUsers = local.users
+          .filter(u => u.email?.toLowerCase().endsWith('@svkm.ac.in'))
+          .map(u => {
+            let assignedColleges = u.assignedColleges;
+            if (Array.isArray(assignedColleges)) {
+              assignedColleges = assignedColleges.filter(c => !PURGED_COLLEGES.has(c));
+            }
+            let assignedPrograms = u.assignedPrograms;
+            if (assignedPrograms && typeof assignedPrograms === 'object') {
+              assignedPrograms = { ...assignedPrograms };
+              PURGED_COLLEGES.forEach(code => delete assignedPrograms[code]);
+            }
+            return { ...u, assignedColleges, assignedPrograms };
+          });
         initialUsers = cleanUsers.length > 0 ? cleanUsers : INITIAL_USERS;
         setUsers(initialUsers);
       }

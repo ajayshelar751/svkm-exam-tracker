@@ -323,20 +323,25 @@ export class SupabaseService {
       `);
 
       if (!uErr && dbUsers && dbUsers.length > 0) {
+        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
         return dbUsers.map(u => {
           let assignedColleges = [];
           const hasAllCols = u.user_college_assignments?.some(a => a.is_all_colleges);
           if (hasAllCols) {
             assignedColleges = ['ALL'];
-            assignedPrograms['ALL'] = ['ALL'];
           } else {
-            assignedColleges = (u.user_college_assignments || []).map(a => a.colleges?.code).filter(Boolean);
+            assignedColleges = (u.user_college_assignments || [])
+              .map(a => a.colleges?.code)
+              .filter(code => code && !PURGED_COLLEGES.has(code));
           }
 
           const assignedPrograms = {};
+          if (hasAllCols) {
+            assignedPrograms['ALL'] = ['ALL'];
+          }
           (u.user_program_assignments || []).forEach(pa => {
             const cCode = pa.colleges?.code;
-            if (cCode) {
+            if (cCode && !PURGED_COLLEGES.has(cCode)) {
               if (!assignedPrograms[cCode]) assignedPrograms[cCode] = [];
               if (pa.is_all_programs) {
                 assignedPrograms[cCode] = ['ALL'];
@@ -411,8 +416,12 @@ export class SupabaseService {
           client.from('system_config').select('config_key, config_value')
         ]);
 
+        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
+
         if (!collegesRes.error && collegesRes.data && collegesRes.data.length > 0) {
-          config.colleges = collegesRes.data.map(c => ({ id: c.code, name: c.name, code: c.code }));
+          config.colleges = collegesRes.data
+            .filter(c => !PURGED_COLLEGES.has(c.code))
+            .map(c => ({ id: c.code, name: c.name, code: c.code }));
         }
         if (!yearsRes.error && yearsRes.data && yearsRes.data.length > 0) {
           config.batches = yearsRes.data.map(y => y.code);
@@ -429,7 +438,7 @@ export class SupabaseService {
           const pMap = {};
           progsRes.data.forEach(p => {
             const col = p.colleges?.code;
-            if (col) {
+            if (col && !PURGED_COLLEGES.has(col)) {
               if (!pMap[col]) pMap[col] = [];
               if (!pMap[col].includes(p.name)) pMap[col].push(p.name);
             }
@@ -487,6 +496,9 @@ export class SupabaseService {
           const nextContexts = {};
           dbSessions.forEach(sess => {
             const cKey = sess.context_key;
+            if (!cKey) return;
+            const colPrefix = cKey.split('__')[0];
+            if (PURGED_COLLEGES.has(colPrefix)) return;
             this.recordSessionMapping(sess.id, cKey);
             const dm = Array.isArray(sess.dashboard_metrics) ? sess.dashboard_metrics[0] : sess.dashboard_metrics;
             const headerMetrics = dm ? {
@@ -1235,6 +1247,8 @@ export class SupabaseService {
               if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                 const row = payload.new;
                 if (!row || !row.context_key) return;
+                const colPrefix = row.context_key.split('__')[0];
+                if (colPrefix && ['MITHIBAI', 'MBC', 'DJSCE'].includes(colPrefix)) return;
                 SupabaseService.recordSessionMapping(row.id, row.context_key);
                 console.log(`%c[Realtime:EventReceived] exam_sessions (${payload.eventType}): ContextKey: ${row.context_key}`, 'color: #3b82f6; font-weight: bold;');
 
