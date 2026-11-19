@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_CONFIG } from '../constants/config.js';
+import { SUPABASE_CONFIG, PURGED_COLLEGES } from '../constants/config.js';
 import { hashPassword, verifyPassword } from '../utils/crypto.js';
 import { normalizeExamCycles } from '../utils/helpers.js';
 
@@ -323,7 +323,6 @@ export class SupabaseService {
       `);
 
       if (!uErr && dbUsers && dbUsers.length > 0) {
-        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
         return dbUsers.map(u => {
           let assignedColleges = [];
           const hasAllCols = u.user_college_assignments?.some(a => a.is_all_colleges);
@@ -416,8 +415,6 @@ export class SupabaseService {
           client.from('system_config').select('config_key, config_value')
         ]);
 
-        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
-
         if (!collegesRes.error && collegesRes.data && collegesRes.data.length > 0) {
           config.colleges = collegesRes.data
             .filter(c => !PURGED_COLLEGES.has(c.code))
@@ -501,8 +498,9 @@ export class SupabaseService {
             if (PURGED_COLLEGES.has(colPrefix)) return;
             this.recordSessionMapping(sess.id, cKey);
             const dm = Array.isArray(sess.dashboard_metrics) ? sess.dashboard_metrics[0] : sess.dashboard_metrics;
+            const batchFromKey = cKey.split('__')[1] || '';
             const headerMetrics = dm ? {
-              batch: dm.batch_year,
+              batch: dm.batch_year || batchFromKey,
               totalStudents: dm.total_students || 0,
               pwdStudents: dm.pwd_students || 0,
               debarredStudents: dm.debarred_students || 0,
@@ -512,8 +510,21 @@ export class SupabaseService {
               prevBatchStudents: dm.prev_batch_students || 0,
               appearingBatches: dm.appearing_batches || "",
               numPrograms: dm.num_programs || 1,
-              examMonthYear: dm.exam_month_year || sess.exam_month_year || ""
-            } : {};
+              examMonthYear: dm.exam_month_year || sess.exam_month_year || "",
+              isUploadedFromExcel: (dm.total_students || 0) > 0
+            } : {
+              batch: batchFromKey,
+              totalStudents: 0,
+              pwdStudents: 0,
+              debarredStudents: 0,
+              ufmCases: 0,
+              numModules: 0,
+              regBatchStudents: 0,
+              prevBatchStudents: 0,
+              appearingBatches: "",
+              numPrograms: 1,
+              examMonthYear: sess.exam_month_year || ""
+            };
 
             const logs = {};
             (sess.activity_logs || []).forEach(al => {
@@ -586,6 +597,9 @@ export class SupabaseService {
         }
       } catch (ctxErr) {
         console.warn("Supabase contexts sync notice:", ctxErr);
+        if (localData?.contexts && Object.keys(localData.contexts).length > 0 && Object.keys(contexts).length === 0) {
+          contexts = localData.contexts;
+        }
       }
 
       const merged = { config, users, activities, contexts };

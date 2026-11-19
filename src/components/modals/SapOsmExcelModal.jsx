@@ -163,7 +163,7 @@ export default function SapOsmExcelModal({
               cohortsMap[cohortKey] = {
                 programCode: pCode,
                 programName: matchedProgram || `Program ${pCode}`,
-                collegeId: collegeId || (config?.colleges?.[0]?.id || "NM"),
+                collegeId: collegeId || (config?.colleges?.[0]?.id || "NMC"),
                 semester: semMapped,
                 sessionCode: sessRaw,
                 studentCount: 0,
@@ -182,7 +182,7 @@ export default function SapOsmExcelModal({
               detectedCollege = cId;
             }
           }
-          if (!detectedCollege) detectedCollege = context?.college || (config?.colleges?.[0]?.id || "NM");
+          if (!detectedCollege) detectedCollege = context?.college || (config?.colleges?.[0]?.id || "NMC");
 
           let normalizedYear = context?.batch || "2026-27";
           if (detectedYears.size > 0) {

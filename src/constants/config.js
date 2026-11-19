@@ -74,8 +74,10 @@ export const INITIAL_PHASES = [
   "Phase 7: Post-Exam, DigiLocker & Convocation"
 ];
 
+export const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
+
 export const SUPABASE_CONFIG = {
-  url: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url) || localStorage.getItem('svkm_supabase_url') || "https://wfkjekwxmodyzncytyqq.supabase.co",
-  anonKey: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey) || localStorage.getItem('svkm_supabase_anon_key') || "sb_publishable_evpiRRWqkrlBwWud2F6eIg_6oE3HnLs"
+  url: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || (typeof window !== 'undefined' && window.SUPABASE_CONFIG?.url) || (typeof localStorage !== 'undefined' && localStorage.getItem('svkm_supabase_url')) || "https://wfkjekwxmodyzncytyqq.supabase.co",
+  anonKey: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || (typeof window !== 'undefined' && window.SUPABASE_CONFIG?.anonKey) || (typeof localStorage !== 'undefined' && localStorage.getItem('svkm_supabase_anon_key')) || "sb_publishable_evpiRRWqkrlBwWud2F6eIg_6oE3HnLs"
 };
 export const FIREBASE_CONFIG = SUPABASE_CONFIG; // Backward compatibility alias

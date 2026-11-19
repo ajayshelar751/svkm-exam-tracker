@@ -24,6 +24,7 @@ import {
   INITIAL_SEMESTERS,
   INITIAL_EXAM_CYCLES,
   INITIAL_PHASES,
+  PURGED_COLLEGES,
   SUPABASE_CONFIG,
   FIREBASE_CONFIG
 } from './constants/config.js';
@@ -152,7 +153,6 @@ export default function App() {
     if (local) {
       if (local.config) {
         const cln = { ...local.config, hideDemoLogins: true, examCycles: normalizeExamCycles(local.config.examCycles) };
-        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
         if (Array.isArray(cln.colleges)) {
           cln.colleges = cln.colleges.filter(c => !PURGED_COLLEGES.has(c.id) && !PURGED_COLLEGES.has(c.code));
         }
@@ -163,7 +163,6 @@ export default function App() {
         setConfig(cln);
       }
       if (local.users) {
-        const PURGED_COLLEGES = new Set(['MITHIBAI', 'MBC', 'DJSCE']);
         const cleanUsers = local.users
           .filter(u => u.email?.toLowerCase().endsWith('@svkm.ac.in'))
           .map(u => {
