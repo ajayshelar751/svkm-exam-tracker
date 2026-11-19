@@ -5,6 +5,10 @@ import Icon from '../common/Icon.jsx';
 export default function StaffFormModal({ user, users = [], config, showToast, onClose, onSave }) {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
+  const [employeeId, setEmployeeId] = useState(user?.employeeId || user?.employee_id || "");
+  const [sapId, setSapId] = useState(user?.sapId || user?.sap_id || "");
+  const [workingHoursStart, setWorkingHoursStart] = useState(user?.workingHoursStart || user?.working_hours_start || "09:00");
+  const [workingHoursEnd, setWorkingHoursEnd] = useState(user?.workingHoursEnd || user?.working_hours_end || "17:30");
   const [password, setPassword] = useState(() => {
     const raw = user?.password;
     if (!raw || raw.startsWith("sha256:") || raw.startsWith("fb:")) {
@@ -121,6 +125,10 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
       id: user?.id || `user_${Date.now()}`,
       name: name.trim(),
       email: email.trim(),
+      employeeId: employeeId.trim(),
+      sapId: sapId.trim(),
+      workingHoursStart: workingHoursStart.trim(),
+      workingHoursEnd: workingHoursEnd.trim(),
       password: finalPassword,
       mustChangePassword: user ? (password !== user.password ? false : (user.mustChangePassword || false)) : false,
       role,
@@ -159,6 +167,65 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded-xl"
             />
+          </div>
+
+          {/* Institutional Identifiers: Employee ID & SAP ID */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                <Icon name="user" size={13} className="text-indigo-600 dark:text-indigo-400" />
+                <span>Employee ID</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. EMP-10492"
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                <Icon name="database" size={13} className="text-indigo-600 dark:text-indigo-400" />
+                <span>SAP ID</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 5002184"
+                value={sapId}
+                onChange={(e) => setSapId(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Working Hours Schedule */}
+          <div className="p-3 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/60 space-y-2">
+            <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+              <Icon name="clock" size={13} className="text-indigo-600 dark:text-indigo-400" />
+              <span>Staff Working Hours</span>
+              <span className="text-[10px] font-normal text-slate-400">(Operational shift timing)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Start Time</label>
+                <input
+                  type="time"
+                  value={workingHoursStart}
+                  onChange={(e) => setWorkingHoursStart(e.target.value)}
+                  className="w-full px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">End Time</label>
+                <input
+                  type="time"
+                  value={workingHoursEnd}
+                  onChange={(e) => setWorkingHoursEnd(e.target.value)}
+                  className="w-full px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono"
+                />
+              </div>
+            </div>
           </div>
 
           <div>

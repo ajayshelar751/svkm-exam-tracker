@@ -25,6 +25,10 @@ export const INITIAL_USERS = [
     "mustChangePassword": true,
     "role": "COE",
     "isAdmin": true,
+    "employeeId": "EMP-CED-001",
+    "sapId": "5001001",
+    "workingHoursStart": "09:00",
+    "workingHoursEnd": "17:30",
     "assignedColleges": [
       "ALL"
     ],
@@ -43,6 +47,10 @@ export const INITIAL_USERS = [
     "mustChangePassword": true,
     "role": "DY_COE",
     "isAdmin": true,
+    "employeeId": "EMP-CED-002",
+    "sapId": "5001002",
+    "workingHoursStart": "09:00",
+    "workingHoursEnd": "17:30",
     "assignedColleges": [
       "ALL"
     ],
@@ -61,6 +69,10 @@ export const INITIAL_USERS = [
     "mustChangePassword": true,
     "role": "AR",
     "isAdmin": true,
+    "employeeId": "EMP-CED-003",
+    "sapId": "5001003",
+    "workingHoursStart": "09:00",
+    "workingHoursEnd": "17:30",
     "assignedColleges": [
       "ALL"
     ],

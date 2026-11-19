@@ -317,7 +317,7 @@ export class SupabaseService {
     if (!client) return [];
     try {
       const { data: dbUsers, error: uErr } = await client.from('users').select(`
-        id, legacy_id, name, email, role_code, is_admin, is_active, must_change_password, password_hash,
+        *,
         user_college_assignments(college_id, is_all_colleges, colleges(code)),
         user_program_assignments(college_id, program_id, is_all_programs, colleges(code), programs(name))
       `);
@@ -359,6 +359,10 @@ export class SupabaseService {
             active: !!u.is_active,
             mustChangePassword: !!u.must_change_password,
             password: u.password_hash || "Pass@123",
+            employeeId: u.employee_id || u.employeeId || "",
+            sapId: u.sap_id || u.sapId || "",
+            workingHoursStart: u.working_hours_start || u.workingHoursStart || "09:00",
+            workingHoursEnd: u.working_hours_end || u.workingHoursEnd || "17:30",
             assignedColleges,
             assignedPrograms
           };
@@ -1416,9 +1420,25 @@ export class SupabaseService {
         if (user.password) {
           updatePayload.password_hash = user.password;
         }
-        const { error: uErr } = await client.from('users')
+        if (user.employeeId !== undefined) updatePayload.employee_id = user.employeeId || null;
+        if (user.sapId !== undefined) updatePayload.sap_id = user.sapId || null;
+        if (user.workingHoursStart !== undefined) updatePayload.working_hours_start = user.workingHoursStart || null;
+        if (user.workingHoursEnd !== undefined) updatePayload.working_hours_end = user.workingHoursEnd || null;
+
+        let { error: uErr } = await client.from('users')
           .update(updatePayload)
           .eq('id', existingUser.id);
+
+        // Fallback: If DB does not have the new columns yet (error 42703), retry without them
+        if (uErr && (uErr.code === '42703' || String(uErr.message).includes('column') || String(uErr.message).includes('schema cache'))) {
+          delete updatePayload.employee_id;
+          delete updatePayload.sap_id;
+          delete updatePayload.working_hours_start;
+          delete updatePayload.working_hours_end;
+          const retry = await client.from('users').update(updatePayload).eq('id', existingUser.id);
+          uErr = retry.error;
+        }
+
         if (uErr) {
           console.error("Error updating user in Supabase:", uErr);
           return { success: false, error: uErr };
@@ -1434,12 +1454,28 @@ export class SupabaseService {
           is_admin: !!user.isAdmin,
           is_active: user.active !== false,
           must_change_password: !!user.mustChangePassword,
-          password_hash: user.password || "Pass@123"
+          password_hash: user.password || "Pass@123",
+          employee_id: user.employeeId || null,
+          sap_id: user.sapId || null,
+          working_hours_start: user.workingHoursStart || null,
+          working_hours_end: user.workingHoursEnd || null
         };
-        const { data: inserted, error: iErr } = await client.from('users')
+        let { data: inserted, error: iErr } = await client.from('users')
           .insert(insertPayload)
           .select('id')
           .single();
+
+        // Fallback: If DB does not have the new columns yet, retry without them
+        if (iErr && (iErr.code === '42703' || String(iErr.message).includes('column') || String(iErr.message).includes('schema cache'))) {
+          delete insertPayload.employee_id;
+          delete insertPayload.sap_id;
+          delete insertPayload.working_hours_start;
+          delete insertPayload.working_hours_end;
+          const retry = await client.from('users').insert(insertPayload).select('id').single();
+          inserted = retry.data;
+          iErr = retry.error;
+        }
+
         if (iErr) {
           console.error("Error inserting user in Supabase:", iErr);
           return { success: false, error: iErr };
