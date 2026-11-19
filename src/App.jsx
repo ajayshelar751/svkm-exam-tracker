@@ -336,6 +336,83 @@ export default function App() {
     }
   }, [users]);
 
+  // Real-time Staff Presence Tracking (Online / Logged-in users)
+  const [onlineUserMap, setOnlineUserMap] = useState(() => {
+    try {
+      const saved = localStorage.getItem('svkm_active_user');
+      const u = saved ? JSON.parse(saved) : null;
+      if (u) {
+        return { [u.id]: true, [u.email?.toLowerCase()]: true };
+      }
+    } catch (e) {}
+    return {};
+  });
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Local active user is guaranteed online
+    const localOnline = {
+      [currentUser.id]: true,
+      [currentUser.email?.toLowerCase()]: true
+    };
+    setOnlineUserMap(prev => ({ ...prev, ...localOnline }));
+
+    if (!dbRef.current || !dbRef.current.channel) return;
+
+    let presenceChannel = null;
+    try {
+      presenceChannel = dbRef.current.channel('ced_staff_presence', {
+        config: {
+          presence: { key: currentUser.id || currentUser.email }
+        }
+      });
+
+      presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+          const state = presenceChannel.presenceState();
+          const activeMap = {
+            [currentUser.id]: true,
+            [currentUser.email?.toLowerCase()]: true
+          };
+          Object.values(state).forEach(presences => {
+            (presences || []).forEach(p => {
+              if (p.userId) activeMap[p.userId] = true;
+              if (p.email) activeMap[p.email.toLowerCase()] = true;
+              if (p.id) activeMap[p.id] = true;
+            });
+          });
+          setOnlineUserMap(activeMap);
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            try {
+              await presenceChannel.track({
+                userId: currentUser.id,
+                email: currentUser.email,
+                name: currentUser.name,
+                role: currentUser.role,
+                onlineAt: new Date().toISOString()
+              });
+            } catch (trackErr) {
+              console.warn("Presence track notice:", trackErr);
+            }
+          }
+        });
+    } catch (err) {
+      console.warn("Realtime presence setup notice:", err);
+    }
+
+    return () => {
+      if (presenceChannel && dbRef.current) {
+        try {
+          presenceChannel.untrack();
+          dbRef.current.removeChannel(presenceChannel);
+        } catch (e) {}
+      }
+    };
+  }, [currentUser?.id, currentUser?.email, cloudStatus]);
+
 // Sync default Batch for all users when currentBatch loads from Cloud/Storage or on User Login
   useEffect(() => {
     const defaultBatch = config.currentBatch || config.batches?.[0];
@@ -1449,6 +1526,7 @@ export default function App() {
             contexts={allContextsWithActive}
             config={config}
             users={users}
+            onlineUserMap={onlineUserMap}
             onNavigateToContextPhase={handleNavigateToContextPhase}
             onNavigateToContext={handleNavigateToContext}
           />
@@ -1465,6 +1543,7 @@ export default function App() {
             currentLogs={currentLogs}
             context={context}
             headerMetrics={currentHeaderMetrics}
+            onlineUserMap={onlineUserMap}
             onSaveUser={handleSaveStaffUser}
             onDeleteUser={handleDeleteStaffUser}
             onResetPassword={handleResetPassword}

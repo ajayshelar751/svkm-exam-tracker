@@ -178,8 +178,14 @@ export default function TopNavbar({
               className="text-left group flex items-center gap-2 py-1 px-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               title="Click to change password"
             >
-              <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:bg-indigo-600 group-hover:text-white transition">
-                {currentUser.name.charAt(0)}
+              <div className="relative">
+                <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:bg-indigo-600 group-hover:text-white transition">
+                  {currentUser.name.charAt(0)}
+                </div>
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+                  title="Logged In"
+                />
               </div>
               <div className="hidden sm:block">
                 <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">

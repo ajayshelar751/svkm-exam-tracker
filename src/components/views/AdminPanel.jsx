@@ -16,6 +16,7 @@ export default function AdminPanel({
   currentLogs,
   context,
   headerMetrics,
+  onlineUserMap = {},
   onSaveUser,
   onDeleteUser,
   onResetPassword,
@@ -311,11 +312,39 @@ export default function AdminPanel({
                   const stats = staffStudentStats[u.id] || { totalStudents: 0, byCollege: {}, cohortCount: 0 };
                   const activeColleges = Object.entries(stats.byCollege).filter(([_, count]) => count > 0);
 
+                  const isOnline = Boolean((u.id && onlineUserMap[u.id]) || (u.email && onlineUserMap[u.email.toLowerCase()]));
+
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                       <td className="py-2.5 px-3">
-                        <div className="font-bold text-slate-900 dark:text-white">{u.name}</div>
-                        <div className="text-[11px] text-slate-500">{u.email}</div>
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative flex-shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold flex items-center justify-center text-xs border border-slate-200 dark:border-slate-700">
+                              {u.name?.charAt(0) || 'U'}
+                            </div>
+                            {isOnline && (
+                              <span
+                                className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+                                title="Logged In (Online)"
+                              />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <span>{u.name}</span>
+                              {isOnline && (
+                                <span
+                                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800"
+                                  title="Currently Logged In"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  Online
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-500">{u.email}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="py-2.5 px-2 text-center">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
@@ -393,12 +422,22 @@ export default function AdminPanel({
                           )}
                         </div>
                       </td>
-                      <td className="py-2.5 px-2 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          u.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
-                        }`}>
-                          {u.active ? 'Active' : 'Inactive'}
-                        </span>
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            u.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                          }`}>
+                            {u.active ? 'Active' : 'Inactive'}
+                          </span>
+                          {isOnline ? (
+                            <span className="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Logged In
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-slate-400">Offline</span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">

@@ -17,6 +17,7 @@ export default function ExecutiveDashboardView({
   contexts = {},
   config,
   users = [],
+  onlineUserMap = {},
   onNavigateToContextPhase,
   onNavigateToContext
 }) {
@@ -351,6 +352,7 @@ export default function ExecutiveDashboardView({
     let sumPending = 0;
     let sumQueries = 0;
     let maxStudentsScope = 0;
+    let onlineCount = 0;
 
     filteredAndSortedStaff.forEach(st => {
       sumCompleted += st.totalCompleted;
@@ -358,12 +360,16 @@ export default function ExecutiveDashboardView({
       sumPending += st.totalPending;
       sumQueries += st.openQueries;
       if (st.totalStudents > maxStudentsScope) maxStudentsScope = st.totalStudents;
+      if ((st.id && onlineUserMap[st.id]) || (st.email && onlineUserMap[st.email.toLowerCase()])) {
+        onlineCount++;
+      }
     });
 
     const avgRate = sumAssigned > 0 ? Math.round((sumCompleted / sumAssigned) * 100) : 100;
 
     return {
       totalStaff,
+      onlineCount,
       sumCompleted,
       sumAssigned,
       sumPending,
@@ -371,7 +377,7 @@ export default function ExecutiveDashboardView({
       avgRate,
       maxStudentsScope
     };
-  }, [filteredAndSortedStaff]);
+  }, [filteredAndSortedStaff, onlineUserMap]);
 
   const handleStaffSort = (field) => {
     if (staffSortField === field) {
@@ -711,7 +717,15 @@ export default function ExecutiveDashboardView({
           <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
             <div>
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Staff</div>
-              <div className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">{staffSummary.totalStaff}</div>
+              <div className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-baseline gap-1.5">
+                <span>{staffSummary.totalStaff}</span>
+                {staffSummary.onlineCount > 0 && (
+                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    {staffSummary.onlineCount} online
+                  </span>
+                )}
+              </div>
             </div>
             <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
               <Icon name="users" size={14} />
@@ -910,18 +924,37 @@ export default function ExecutiveDashboardView({
                     }
                   }[st.ragStatus] || { label: st.ragStatus, cls: "bg-slate-100 text-slate-500" };
 
+                  const isOnline = Boolean((st.id && onlineUserMap[st.id]) || (st.email && onlineUserMap[st.email.toLowerCase()]));
+
                   return (
                     <React.Fragment key={st.id}>
                       <tr className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${isExpanded ? 'bg-indigo-50/30 dark:bg-indigo-950/20' : ''}`}>
                         {/* Name & Email */}
                         <td className="py-2.5 px-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                              {st.name?.charAt(0) || 'U'}
+                            <div className="relative flex-shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-xs">
+                                {st.name?.charAt(0) || 'U'}
+                              </div>
+                              {isOnline && (
+                                <span
+                                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+                                  title="Logged In"
+                                />
+                              )}
                             </div>
                             <div className="min-w-0">
                               <div className="font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                                 <span>{st.name}</span>
+                                {isOnline && (
+                                  <span
+                                    className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800 flex-shrink-0"
+                                    title="Currently Logged In"
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Online
+                                  </span>
+                                )}
                                 {st.isAdmin && (
                                   <span className="text-[9px] px-1 py-0.2 bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 rounded font-semibold">
                                     ADMIN
