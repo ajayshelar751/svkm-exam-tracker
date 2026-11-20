@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../common/Icon.jsx';
+import { formatDuration } from '../../utils/helpers.js';
 
 export default function SessionModulesModal({
   isOpen,
@@ -260,7 +261,7 @@ export default function SessionModulesModal({
                         <span className="font-bold text-slate-900 dark:text-white text-xs">{m.bookedStudents || 0}</span>
                       </td>
                       <td className="py-2 px-3 text-center text-slate-500 font-mono text-[11px]">
-                        {m.duration && m.duration !== "00:00:00" ? m.duration : "—"}
+                        {formatDuration(m.duration)}
                       </td>
                     </tr>
                   );

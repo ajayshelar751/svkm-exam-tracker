@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import Icon from '../common/Icon.jsx';
-import { getTodayYYYYMMDD, formatDateDisplay } from '../../utils/helpers.js';
+import { getTodayYYYYMMDD, formatDateDisplay, formatDuration } from '../../utils/helpers.js';
 import SessionModulesModal from './SessionModulesModal.jsx';
 
 // --- Enterprise Excel Import, Metric Parser & File Rollback Hub ---
@@ -397,7 +397,7 @@ export default function SapOsmExcelModal({
             }
 
             const creditVal = creditCol ? String(row[creditCol] || "").trim() : "";
-            const durationVal = durationCol ? String(row[durationCol] || "").trim() : "";
+            const durationVal = durationCol ? formatDuration(row[durationCol]) : "";
 
             if (!cohort.modulesMap.has(modAbbrev)) {
               cohort.modulesMap.set(modAbbrev, {

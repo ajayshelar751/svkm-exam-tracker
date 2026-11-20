@@ -539,3 +539,34 @@ export function computeStaffDashboardMetrics(users = [], activities = [], contex
     };
   });
 }
+
+/**
+ * Formats examination duration values (e.g., "Sat Dec 30 1899 01:00:00 GMT+0521 (India Standard Time)",
+ * "01:00:00", or Excel decimal day fraction like 0.041666667) into clean "HH:MM" format (e.g., "01:00").
+ */
+export function formatDuration(val) {
+  if (!val) return "—";
+  const str = String(val).trim();
+  if (!str || str === "0" || str === "00:00:00" || str === "00:00") return "—";
+
+  // Check if it's an Excel decimal day fraction like 0.08333333333333 (2 hrs) or 0.041666666666667 (1 hr)
+  const num = Number(str);
+  if (!isNaN(num) && num > 0 && num < 1 && !str.includes(":")) {
+    const totalMinutes = Math.round(num * 24 * 60);
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hrs === 0 && mins === 0) return "—";
+    return String(hrs).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
+  }
+
+  // Check if string contains HH:MM or HH:MM:SS (including Date.toString() output like 'Sat Dec 30 1899 01:00:00')
+  const timeMatch = str.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (timeMatch) {
+    const hrs = String(timeMatch[1]).padStart(2, "0");
+    const mins = String(timeMatch[2]).padStart(2, "0");
+    if (hrs === "00" && mins === "00") return "—";
+    return hrs + ":" + mins;
+  }
+
+  return str;
+}
