@@ -359,6 +359,8 @@ export class SupabaseService {
             active: !!u.is_active,
             mustChangePassword: !!u.must_change_password,
             password: u.password_hash || "Pass@123",
+            canImportExcel: u.can_import_excel !== undefined ? !!u.can_import_excel : !!(u.is_admin || ['COE', 'DY_COE'].includes(u.role_code)),
+            canRemoveData: u.can_remove_data !== undefined ? !!u.can_remove_data : !!(u.is_admin || ['COE', 'DY_COE'].includes(u.role_code)),
             employeeId: u.employee_id || u.employeeId || "",
             sapId: u.sap_id || u.sapId || "",
             workingHoursStart: u.working_hours_start || u.workingHoursStart || "09:00",
@@ -1424,6 +1426,8 @@ export class SupabaseService {
         if (user.sapId !== undefined) updatePayload.sap_id = user.sapId || null;
         if (user.workingHoursStart !== undefined) updatePayload.working_hours_start = user.workingHoursStart || null;
         if (user.workingHoursEnd !== undefined) updatePayload.working_hours_end = user.workingHoursEnd || null;
+        if (user.canImportExcel !== undefined) updatePayload.can_import_excel = !!user.canImportExcel;
+        if (user.canRemoveData !== undefined) updatePayload.can_remove_data = !!user.canRemoveData;
 
         let { error: uErr } = await client.from('users')
           .update(updatePayload)
@@ -1435,6 +1439,8 @@ export class SupabaseService {
           delete updatePayload.sap_id;
           delete updatePayload.working_hours_start;
           delete updatePayload.working_hours_end;
+          delete updatePayload.can_import_excel;
+          delete updatePayload.can_remove_data;
           const retry = await client.from('users').update(updatePayload).eq('id', existingUser.id);
           uErr = retry.error;
         }
@@ -1458,7 +1464,9 @@ export class SupabaseService {
           employee_id: user.employeeId || null,
           sap_id: user.sapId || null,
           working_hours_start: user.workingHoursStart || null,
-          working_hours_end: user.workingHoursEnd || null
+          working_hours_end: user.workingHoursEnd || null,
+          can_import_excel: user.canImportExcel !== undefined ? !!user.canImportExcel : false,
+          can_remove_data: user.canRemoveData !== undefined ? !!user.canRemoveData : false
         };
         let { data: inserted, error: iErr } = await client.from('users')
           .insert(insertPayload)
@@ -1471,6 +1479,8 @@ export class SupabaseService {
           delete insertPayload.sap_id;
           delete insertPayload.working_hours_start;
           delete insertPayload.working_hours_end;
+          delete insertPayload.can_import_excel;
+          delete insertPayload.can_remove_data;
           const retry = await client.from('users').insert(insertPayload).select('id').single();
           inserted = retry.data;
           iErr = retry.error;

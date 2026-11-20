@@ -19,6 +19,14 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState(user?.role || "ASST");
   const [isAdmin, setIsAdmin] = useState(!!user?.isAdmin);
+  const [canImportExcel, setCanImportExcel] = useState(() => {
+    if (user?.canImportExcel !== undefined) return !!user.canImportExcel;
+    return !!(user?.isAdmin || ['COE', 'DY_COE'].includes(user?.role));
+  });
+  const [canRemoveData, setCanRemoveData] = useState(() => {
+    if (user?.canRemoveData !== undefined) return !!user.canRemoveData;
+    return !!(user?.isAdmin || ['COE', 'DY_COE'].includes(user?.role));
+  });
   const validCollegeIds = (config.colleges || []).map(c => c.id);
   const [assignedColleges, setAssignedColleges] = useState(() => {
     if (!user?.assignedColleges) return [];
@@ -133,6 +141,8 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
       mustChangePassword: user ? (password !== user.password ? false : (user.mustChangePassword || false)) : false,
       role,
       isAdmin,
+      canImportExcel: !!canImportExcel,
+      canRemoveData: !!canRemoveData,
       assignedColleges,
       assignedPrograms: cleanedPrograms,
       active
@@ -284,10 +294,51 @@ export default function StaffFormModal({ user, users = [], config, showToast, on
                 <input
                   type="checkbox"
                   checked={isAdmin}
-                  onChange={(e) => setIsAdmin(e.target.checked)}
+                  onChange={(e) => {
+                    const nextAdmin = e.target.checked;
+                    setIsAdmin(nextAdmin);
+                    if (nextAdmin) {
+                      setCanImportExcel(true);
+                      setCanRemoveData(true);
+                    }
+                  }}
                   className="rounded text-indigo-600 focus:ring-indigo-500"
                 />
                 <span className="font-semibold text-slate-700 dark:text-slate-300">Grant Admin Panel Access</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Operational Data Authorities */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+            <label className="block font-bold text-slate-800 dark:text-slate-200 text-xs">
+              Special Operational Authorities:
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label className="flex items-start gap-2 cursor-pointer bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                <input
+                  type="checkbox"
+                  checked={canImportExcel}
+                  onChange={(e) => setCanImportExcel(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                />
+                <div>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 block text-xs">Authority to Import Excel</span>
+                  <span className="text-[10px] text-slate-400 block">Allows uploading SAP Student Master, OSM, &amp; Acad spreadsheets.</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2 cursor-pointer bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                <input
+                  type="checkbox"
+                  checked={canRemoveData}
+                  onChange={(e) => setCanRemoveData(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                />
+                <div>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 block text-xs">Authority to Remove Data</span>
+                  <span className="text-[10px] text-slate-400 block">Allows rollback of imported files &amp; purging session metrics.</span>
+                </div>
               </label>
             </div>
           </div>

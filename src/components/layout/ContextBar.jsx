@@ -10,7 +10,8 @@ export default function ContextBar({
   setContext,
   contexts = {},
   headerMetrics = {},
-  onUpdateMetrics
+  onUpdateMetrics,
+  onOpenSapOsmModal
 }) {
   // Allowed colleges
   const allowedColleges = useMemo(() => {
@@ -76,13 +77,25 @@ export default function ContextBar({
     }
   }, [hasAnyActiveSem, semesterStudentCounts, context.semester, config.semesters, setContext]);
 
-  // Handlers for Exam Start & End Dates
+  // Authority to import/remove Excel data
+  const hasExcelAuthority = Boolean(
+    currentUser?.isAdmin ||
+    ['COE', 'DY_COE'].includes(currentUser?.role) ||
+    currentUser?.canImportExcel ||
+    currentUser?.canRemoveData
+  );
+
+  // Handlers for Exam Start & End Dates (Exam End must NEVER be prior to Exam Start)
   const handleStartDateChange = (val) => {
     if (!onUpdateMetrics) return;
     const nextMetrics = {
       ...headerMetrics,
       examStartDate: val
     };
+    // If new start date is after current end date, advance end date to match
+    if (val && headerMetrics.examEndDate && val > headerMetrics.examEndDate) {
+      nextMetrics.examEndDate = val;
+    }
     if (val) {
       const m = formatExamMonthYear(val);
       if (m) nextMetrics.examMonthYear = m;
@@ -92,6 +105,10 @@ export default function ContextBar({
 
   const handleEndDateChange = (val) => {
     if (!onUpdateMetrics) return;
+    // Strict institutional rule: Exam End cannot be prior to Exam Start
+    if (val && headerMetrics.examStartDate && val < headerMetrics.examStartDate) {
+      return;
+    }
     onUpdateMetrics({
       ...headerMetrics,
       examEndDate: val
@@ -213,25 +230,41 @@ export default function ContextBar({
             />
           </div>
 
-          {/* Exam End Date */}
+          {/* Exam End Date (min constrained to Exam Start Date) */}
           <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
             <Icon name="calendar" size={14} className="text-rose-600 dark:text-rose-400" />
             <span className="font-semibold text-slate-500">Exam End:</span>
             <input
               type="date"
               value={headerMetrics.examEndDate || ""}
+              min={headerMetrics.examStartDate || undefined}
               onChange={(e) => handleEndDateChange(e.target.value)}
               className="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer text-xs"
-              title="Exam End Date"
+              title={headerMetrics.examStartDate ? `Exam End Date (On or after ${headerMetrics.examStartDate})` : "Exam End Date"}
             />
           </div>
         </div>
 
-        {/* Current Active Context Badge */}
-        <div className="hidden xl:flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono text-[11px] font-semibold border border-indigo-200 dark:border-indigo-800">
-            {context.college} · {context.batch} · {context.program} · {context.semester} · {context.examCycle}
-          </span>
+        {/* Right Action Area: Import Excel Button (Authority Gated) & Context Badge */}
+        <div className="flex items-center gap-2">
+          {hasExcelAuthority && onOpenSapOsmModal && (
+            <button
+              type="button"
+              onClick={onOpenSapOsmModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition shadow-sm"
+              title="Import Excel files (SAP Student Master, Acad Report, OSM Evaluation) or rollback previous files"
+            >
+              <Icon name="upload" size={13} className="text-indigo-600 dark:text-indigo-400" />
+              <span>Import &amp; Rollback Excel</span>
+              <span className="text-[10px] bg-indigo-200/70 dark:bg-indigo-900 px-1 rounded text-indigo-900 dark:text-indigo-200 font-mono">In-Memory</span>
+            </button>
+          )}
+
+          <div className="hidden xl:flex items-center">
+            <span className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono text-[11px] font-semibold border border-indigo-200 dark:border-indigo-800">
+              {context.college} · {context.batch} · {context.program} · {context.semester} · {context.examCycle}
+            </span>
+          </div>
         </div>
       </div>
     </div>

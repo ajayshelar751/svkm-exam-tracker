@@ -1478,6 +1478,7 @@ export default function App() {
             contexts={contexts}
             headerMetrics={currentHeaderMetrics}
             onUpdateMetrics={handleUpdateMetrics}
+            onOpenSapOsmModal={() => setShowSapOsmModal(true)}
           />
         )}
       </header>

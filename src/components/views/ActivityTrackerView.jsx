@@ -33,6 +33,7 @@ export default function ActivityTrackerView({
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedPhases, setCollapsedPhases] = useState({});
   const [selectedIds, setSelectedIds] = useState([]);
+  const [activeRevokeKey, setActiveRevokeKey] = useState(null);
 
   // Strict Institutional Rule: If student count is 0, session operations are locked
   const totalStudents = Number(headerMetrics?.totalStudents ?? (context?.examCycle === "Re-Exam" ? ((headerMetrics?.regBatchStudents || 0) + (headerMetrics?.prevBatchStudents || 0)) : 0)) || 0;
@@ -771,28 +772,89 @@ export default function ActivityTrackerView({
                               const verif = log.verifications?.[role];
                               if (verif && verif.verified) {
                                 const canRevoke = currentUser.isAdmin || currentUser.role === role;
+                                const popKey = `${act.id}_${role}`;
+                                const isPopOpen = activeRevokeKey === popKey;
+
                                 return (
                                   <td key={role} className="py-2 px-2 text-center">
-                                    <div className="group relative inline-block">
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-sm cursor-help">
+                                    <div className="relative inline-flex items-center gap-1">
+                                      {/* Clickable Verification Pill */}
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveRevokeKey(isPopOpen ? null : popKey)}
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-sm transition cursor-pointer"
+                                        title={`Verified on ${formatDateDisplay(verif.date)} by ${verif.userName}. Click for details & options.`}
+                                      >
                                         <Icon name="check" size={11} className="text-emerald-600 dark:text-emerald-400" />
                                         <span>{formatDateDisplay(verif.date)}</span>
-                                      </span>
-                                      
-                                      {/* Tooltip / Revoke on hover */}
-                                      <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 p-2 bg-slate-900 text-white text-[10px] rounded-xl shadow-xl border border-slate-700 whitespace-nowrap z-20">
-                                        <div className="font-bold">Verified by {verif.userName}</div>
-                                        <div className="text-slate-400">{verif.userEmail}</div>
-                                        {canRevoke && !isZeroStudents && (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleUnverify(act, role)}
-                                            className="mt-1.5 px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-[9px] block w-full text-center"
-                                          >
-                                            Revoke Verification
-                                          </button>
-                                        )}
-                                      </div>
+                                      </button>
+
+                                      {/* Direct 1-Click Revoke / Undo Button */}
+                                      {canRevoke && !isZeroStudents && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveRevokeKey(null);
+                                            handleUnverify(act, role);
+                                          }}
+                                          className="p-1 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/60 transition"
+                                          title={`Revoke ${role} Verification`}
+                                        >
+                                          <Icon name="rotate-ccw" size={11} className="text-red-500 hover:scale-110 transition-transform" />
+                                        </button>
+                                      )}
+
+                                      {/* Stable Popover Card (stays solidly open on click) */}
+                                      {isPopOpen && (
+                                        <>
+                                          <div
+                                            className="fixed inset-0 z-30"
+                                            onClick={() => setActiveRevokeKey(null)}
+                                          />
+                                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-3 bg-slate-900 text-white text-[11px] rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap z-40 text-left min-w-[190px]">
+                                            <div className="flex items-center justify-between gap-3 mb-1.5 pb-1 border-b border-slate-800">
+                                              <span className="font-bold text-emerald-400 flex items-center gap-1">
+                                                <Icon name="check" size={12} />
+                                                <span>{role} Verified</span>
+                                              </span>
+                                              <button
+                                                type="button"
+                                                onClick={() => setActiveRevokeKey(null)}
+                                                className="text-slate-400 hover:text-white p-0.5"
+                                              >
+                                                <Icon name="x" size={12} />
+                                              </button>
+                                            </div>
+                                            <div className="text-slate-200 text-[10px]">
+                                              By: <strong>{verif.userName}</strong>
+                                            </div>
+                                            <div className="text-slate-400 text-[10px] truncate max-w-[180px]">
+                                              {verif.userEmail}
+                                            </div>
+                                            <div className="text-slate-400 text-[10px] mb-2 font-mono">
+                                              Date: {formatDateDisplay(verif.date)}
+                                            </div>
+                                            {canRevoke && !isZeroStudents ? (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setActiveRevokeKey(null);
+                                                  handleUnverify(act, role);
+                                                }}
+                                                className="w-full px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[10px] shadow-sm flex items-center justify-center gap-1.5 transition cursor-pointer"
+                                              >
+                                                <Icon name="rotate-ccw" size={11} />
+                                                <span>Revoke Verification</span>
+                                              </button>
+                                            ) : (
+                                              <div className="text-[9px] text-slate-500 italic text-center">
+                                                Revoke requires {role} or Admin
+                                              </div>
+                                            )}
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
                                   </td>
                                 );

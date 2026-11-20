@@ -31,34 +31,7 @@ export default function HeaderMetricsCards({
   const hasExcelData = (metrics.totalStudents > 0) || metrics.isUploadedFromExcel;
 
   return (
-    <div className="my-3 no-print">
-      <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <span>Session Metadata &amp; Student Metrics</span>
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
-              <Icon name="lock" size={10} className="text-slate-400" />
-              <span>Non-Editable • Excel-Derived</span>
-            </span>
-          </span>
-          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full font-medium">
-            Context: {context?.college} • {context?.program} • {context?.semester}
-          </span>
-        </div>
-        {onOpenSapOsmModal && (
-          <button
-            type="button"
-            onClick={onOpenSapOsmModal}
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition shadow-sm"
-            title="Import Excel files (SAP Student Master, Acad Report, OSM Evaluation) to replace metrics or rollback previous files (Zero file storage)"
-          >
-            <Icon name="upload" size={13} className="text-indigo-600 dark:text-indigo-400" />
-            <span>Import &amp; Rollback Excel</span>
-            <span className="text-[10px] bg-indigo-200/70 dark:bg-indigo-900 px-1 rounded text-indigo-900 dark:text-indigo-200 font-mono">In-Memory</span>
-          </button>
-        )}
-      </div>
-
+    <div className="my-2.5 no-print">
       <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5">
         
         {/* 1: ACADEMIC YEAR (Non-editable) */}

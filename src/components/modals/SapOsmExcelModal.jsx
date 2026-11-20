@@ -20,7 +20,10 @@ export default function SapOsmExcelModal({
   showConfirm,
   onClose
 }) {
-  const [activeTab, setActiveTab] = useState("sap"); // 'sap' | 'acad_report' | 'osm' | 'calling_sheet' | 'custom' | 'history'
+  const canUserImport = Boolean(currentUser?.isAdmin || ['COE', 'DY_COE'].includes(currentUser?.role) || currentUser?.canImportExcel);
+  const canUserRemove = Boolean(currentUser?.isAdmin || ['COE', 'DY_COE'].includes(currentUser?.role) || currentUser?.canRemoveData);
+
+  const [activeTab, setActiveTab] = useState(() => canUserImport ? "sap" : "history"); // 'sap' | 'acad_report' | 'osm' | 'calling_sheet' | 'custom' | 'history'
   const [fileName, setFileName] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [parsing, setParsing] = useState(false);
@@ -619,7 +622,7 @@ export default function SapOsmExcelModal({
                     Every file import creates a restore point. Clicking <strong>Rollback Records</strong> reverts affected session metrics back to their exact pre-import snapshot.
                   </p>
                 </div>
-                {activeContextKey && onPurgeContextMetrics && (
+                {canUserRemove && activeContextKey && onPurgeContextMetrics && (
                   <button
                     type="button"
                     onClick={() => onPurgeContextMetrics(activeContextKey)}
@@ -701,7 +704,7 @@ export default function SapOsmExcelModal({
                                 <span className="text-[11px] text-slate-400 italic">
                                   Restored on {item.rolledBackAt ? new Date(item.rolledBackAt).toLocaleDateString() : ""}
                                 </span>
-                              ) : (
+                              ) : canUserRemove ? (
                                 <button
                                   type="button"
                                   onClick={() => onRollbackFile && onRollbackFile(item.id)}
@@ -711,6 +714,8 @@ export default function SapOsmExcelModal({
                                   <Icon name="rotate-ccw" size={12} />
                                   <span>Rollback File</span>
                                 </button>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">Restricted</span>
                               )}
                             </td>
                           </tr>
@@ -725,32 +730,42 @@ export default function SapOsmExcelModal({
 
           {/* DROPZONE (Tabs 1 - 5) */}
           {activeTab !== "history" && (
-            <div>
-              <label className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-2xl p-5 flex flex-col items-center justify-center cursor-pointer transition bg-slate-50/50 dark:bg-slate-800/30 group">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2 group-hover:scale-110 transition">
-                  <Icon name="file-text" size={24} />
-                </div>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 text-center">
-                  {fileName ? fileName : (
-                    activeTab === 'sap' ? 'Select or Drop SAP Student Master Excel (e.g. NMC Student Master Data 2026.XLSX)' :
-                    activeTab === 'acad_report' ? 'Select or Drop Acad Report Excel (Attendance, Eligibility & Course Modules)' :
-                    activeTab === 'osm' ? 'Select or Drop OSM Evaluation Raw Excel' :
-                    activeTab === 'calling_sheet' ? 'Select or Drop Calling Sheet / Seating Excel' :
-                    'Select or Drop any Excel Spreadsheet (.xlsx, .xls, .csv)'
-                  )}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {parsing ? "Parsing spreadsheet in browser memory..." : "Click to browse or drag & drop file here"}
-                </span>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls, .csv"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={parsing}
-                />
-              </label>
-            </div>
+            !canUserImport ? (
+              <div className="p-6 text-center border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 rounded-2xl">
+                <Icon name="lock" size={24} className="text-amber-500 mx-auto mb-2" />
+                <div className="font-bold text-xs text-amber-800 dark:text-amber-200">Excel Import Authority Required</div>
+                <p className="text-[11px] text-amber-600 dark:text-amber-300 mt-1">
+                  Your staff account does not have authority to import Excel spreadsheets. Contact an Administrator or COE to grant this authority.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-2xl p-5 flex flex-col items-center justify-center cursor-pointer transition bg-slate-50/50 dark:bg-slate-800/30 group">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                    <Icon name="file-text" size={24} />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 text-center">
+                    {fileName ? fileName : (
+                      activeTab === 'sap' ? 'Select or Drop SAP Student Master Excel (e.g. NMC Student Master Data 2026.XLSX)' :
+                      activeTab === 'acad_report' ? 'Select or Drop Acad Report Excel (Attendance, Eligibility & Course Modules)' :
+                      activeTab === 'osm' ? 'Select or Drop OSM Evaluation Raw Excel' :
+                      activeTab === 'calling_sheet' ? 'Select or Drop Calling Sheet / Seating Excel' :
+                      'Select or Drop any Excel Spreadsheet (.xlsx, .xls, .csv)'
+                    )}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {parsing ? "Parsing spreadsheet in browser memory..." : "Click to browse or drag & drop file here"}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={parsing}
+                  />
+                </label>
+              </div>
+            )
           )}
 
           {/* Error Message */}
@@ -851,7 +866,7 @@ export default function SapOsmExcelModal({
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {onPurgeContextMetrics && activeContextKey && (
+                    {canUserRemove && onPurgeContextMetrics && activeContextKey && (
                       <button
                         type="button"
                         onClick={() => onPurgeContextMetrics(activeContextKey)}
