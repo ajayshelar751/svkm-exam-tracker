@@ -350,10 +350,10 @@ export default function SapOsmExcelModal({
 
             const cohortKey = `${rawProgAbbrev}__${semester}`;
             if (!cohortsMap[cohortKey]) {
-              let fullProgString = `${rawProgAbbrev} - ${rawProgName}`;
+              let fullProgramString = `${rawProgAbbrev} - ${rawProgName}`;
               const configProgs = config?.programs?.[detectedCollege] || [];
               const found = configProgs.find(p => p.startsWith(rawProgAbbrev + " -") || p.startsWith(rawProgAbbrev) || (rawProgName && p.toLowerCase().includes(rawProgName.toLowerCase())));
-              if (found) fullProgString = found;
+              if (found) fullProgramString = found;
 
               cohortsMap[cohortKey] = {
                 programCode: rawProgAbbrev,
