@@ -624,6 +624,23 @@ export default function App() {
       }
     }
 
+    // Persist modules batch into cloud system_config cache
+    const modulesCloudBatch = {};
+    for (const item of cohortsList) {
+      if (item.modulesList && item.modulesList.length > 0) {
+        const progName = item.programName || item.portalProgramName || item.programCode;
+        const cKey = `${detectedCollege}__${detectedBatch}__${progName}__${item.semester}__Regular`;
+        modulesCloudBatch[cKey] = {
+          modulesList: item.modulesList,
+          modulesBreakdown: item.modulesBreakdown,
+          updatedAt: new Date().toISOString()
+        };
+      }
+    }
+    if (dbRef.current && Object.keys(modulesCloudBatch).length > 0) {
+      StorageService.batchSaveSessionModulesToCloud(dbRef.current, modulesCloudBatch).catch(e => console.warn(e));
+    }
+
     // Save File Ingestion History Ledger entry
     const historyEntry = {
       id: "imp_" + Date.now(),
@@ -875,21 +892,23 @@ export default function App() {
   };
 
   // Update Header Metrics explicitly via saveHeaderMetricsToCloud
-  const handleUpdateMetrics = (metrics) => {
+  const handleUpdateMetrics = (metrics, optContextKey) => {
+    const targetKey = optContextKey || currentContextKey;
+    const targetCtx = contexts[targetKey] || currentContextData;
     const updated = {
-      ...currentContextData,
+      ...targetCtx,
       headerMetrics: metrics
     };
     setContexts(prev => {
       const nextContexts = {
         ...prev,
-        [currentContextKey]: updated
+        [targetKey]: updated
       };
       StorageService.saveLocalData({ config, users, activities, contexts: nextContexts });
       return nextContexts;
     });
     if (dbRef.current) {
-      StorageService.saveHeaderMetricsToCloud(dbRef.current, currentContextKey, metrics)
+      StorageService.saveHeaderMetricsToCloud(dbRef.current, targetKey, metrics)
         .catch(err => {
           console.warn("Cloud write error:", err);
           setSyncError(true);

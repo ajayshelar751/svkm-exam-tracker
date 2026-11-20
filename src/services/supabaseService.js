@@ -448,10 +448,15 @@ export class SupabaseService {
           });
           config.programs = pMap;
         }
+        let modulesCloudCache = {};
         if (!sysRes.error && sysRes.data) {
           const pSet = sysRes.data.find(s => s.config_key === 'portal_settings');
           if (pSet?.config_value) {
             config = { ...config, ...pSet.config_value };
+          }
+          const modCache = sysRes.data.find(s => s.config_key === 'session_modules_cache');
+          if (modCache?.config_value) {
+            modulesCloudCache = modCache.config_value;
           }
         }
         if (config.examCycles) {
@@ -505,31 +510,24 @@ export class SupabaseService {
             this.recordSessionMapping(sess.id, cKey);
             const dm = Array.isArray(sess.dashboard_metrics) ? sess.dashboard_metrics[0] : sess.dashboard_metrics;
             const batchFromKey = cKey.split('__')[1] || '';
-            const headerMetrics = dm ? {
-              batch: dm.batch_year || batchFromKey,
-              totalStudents: dm.total_students || 0,
-              pwdStudents: dm.pwd_students || 0,
-              debarredStudents: dm.debarred_students || 0,
-              ufmCases: dm.ufm_cases || 0,
-              numModules: dm.num_modules || 0,
-              regBatchStudents: dm.reg_batch_students || 0,
-              prevBatchStudents: dm.prev_batch_students || 0,
-              appearingBatches: dm.appearing_batches || "",
-              numPrograms: dm.num_programs || 1,
-              examMonthYear: dm.exam_month_year || sess.exam_month_year || "",
-              isUploadedFromExcel: (dm.total_students || 0) > 0
-            } : {
-              batch: batchFromKey,
-              totalStudents: 0,
-              pwdStudents: 0,
-              debarredStudents: 0,
-              ufmCases: 0,
-              numModules: 0,
-              regBatchStudents: 0,
-              prevBatchStudents: 0,
-              appearingBatches: "",
-              numPrograms: 1,
-              examMonthYear: sess.exam_month_year || ""
+            const existingLocalMetrics = localData?.contexts?.[cKey]?.headerMetrics || {};
+            const cloudCached = modulesCloudCache?.[cKey] || {};
+            const headerMetrics = {
+              ...existingLocalMetrics,
+              batch: (dm && dm.batch_year) || existingLocalMetrics.batch || batchFromKey,
+              totalStudents: dm ? (dm.total_students || 0) : (existingLocalMetrics.totalStudents || 0),
+              pwdStudents: dm ? (dm.pwd_students || 0) : (existingLocalMetrics.pwdStudents || 0),
+              debarredStudents: dm ? (dm.debarred_students || 0) : (existingLocalMetrics.debarredStudents || 0),
+              ufmCases: dm ? (dm.ufm_cases || 0) : (existingLocalMetrics.ufmCases || 0),
+              numModules: dm ? (dm.num_modules || 0) : (existingLocalMetrics.numModules || 0),
+              regBatchStudents: dm ? (dm.reg_batch_students || 0) : (existingLocalMetrics.regBatchStudents || 0),
+              prevBatchStudents: dm ? (dm.prev_batch_students || 0) : (existingLocalMetrics.prevBatchStudents || 0),
+              appearingBatches: dm ? (dm.appearing_batches || "") : (existingLocalMetrics.appearingBatches || ""),
+              numPrograms: dm ? (dm.num_programs || 1) : (existingLocalMetrics.numPrograms || 1),
+              examMonthYear: (dm && dm.exam_month_year) || sess.exam_month_year || existingLocalMetrics.examMonthYear || "",
+              isUploadedFromExcel: dm ? ((dm.total_students || 0) > 0) : (existingLocalMetrics.isUploadedFromExcel || false),
+              modulesList: existingLocalMetrics.modulesList || cloudCached.modulesList || undefined,
+              modulesBreakdown: existingLocalMetrics.modulesBreakdown || cloudCached.modulesBreakdown || undefined
             };
 
             const logs = {};
@@ -803,8 +801,53 @@ export class SupabaseService {
           .update({ exam_month_year: headerMetrics.examMonthYear })
           .eq('id', sessionId);
       }
+
+      if (Array.isArray(headerMetrics.modulesList) && headerMetrics.modulesList.length > 0) {
+        this.saveSessionModulesToCloud(client, contextKey, headerMetrics.modulesList, headerMetrics.modulesBreakdown).catch(() => {});
+      }
     } catch (e) {
       console.warn("Failed to save header metrics to Supabase:", e);
+    }
+  }
+
+  // --- Save Session Modules to Cloud (system_config: session_modules_cache) ---
+  static async saveSessionModulesToCloud(client, contextKey, modulesList, modulesBreakdown) {
+    if (!client || !contextKey || !Array.isArray(modulesList)) return;
+    try {
+      const { data } = await client.from('system_config').select('config_value').eq('config_key', 'session_modules_cache').maybeSingle();
+      const currentCache = data?.config_value || {};
+      const updatedCache = {
+        ...currentCache,
+        [contextKey]: {
+          modulesList,
+          modulesBreakdown: modulesBreakdown || null,
+          updatedAt: new Date().toISOString()
+        }
+      };
+      await client.from('system_config').upsert({
+        config_key: 'session_modules_cache',
+        config_value: updatedCache
+      }, { onConflict: 'config_key' });
+    } catch (e) {
+      console.warn("Failed to persist session modules cache to Supabase:", e);
+    }
+  }
+
+  static async batchSaveSessionModulesToCloud(client, modulesMap) {
+    if (!client || !modulesMap || Object.keys(modulesMap).length === 0) return;
+    try {
+      const { data } = await client.from('system_config').select('config_value').eq('config_key', 'session_modules_cache').maybeSingle();
+      const currentCache = data?.config_value || {};
+      const updatedCache = {
+        ...currentCache,
+        ...modulesMap
+      };
+      await client.from('system_config').upsert({
+        config_key: 'session_modules_cache',
+        config_value: updatedCache
+      }, { onConflict: 'config_key' });
+    } catch (e) {
+      console.warn("Failed to batch persist session modules cache to Supabase:", e);
     }
   }
 

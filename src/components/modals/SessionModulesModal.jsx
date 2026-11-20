@@ -10,13 +10,43 @@ export default function SessionModulesModal({
   const [filterType, setFilterType] = useState("ALL"); // 'ALL' | 'WRIT' | 'LAB' | 'ICA'
   const [searchQuery, setSearchQuery] = useState("");
 
-  const modulesList = headerMetrics.modulesList || [];
-  const breakdown = headerMetrics.modulesBreakdown || {
-    total: modulesList.length,
-    writ: modulesList.filter(m => m.examType === "WRIT").length,
-    lab: modulesList.filter(m => m.examType === "LAB").length,
-    ica: modulesList.filter(m => m.examType === "ICA").length
-  };
+  // Robust modules retrieval: check prop, with persistent fallback from local storage cache
+  const modulesList = useMemo(() => {
+    if (Array.isArray(headerMetrics?.modulesList) && headerMetrics.modulesList.length > 0) {
+      return headerMetrics.modulesList;
+    }
+    try {
+      const raw = localStorage.getItem('svkm_exam_tracker_data');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const ctxKey = `${context.college}__${context.batch}__${context.program}__${context.semester}__${context.examCycle || 'Regular'}`;
+        const cached = parsed.contexts?.[ctxKey]?.headerMetrics?.modulesList;
+        if (Array.isArray(cached) && cached.length > 0) return cached;
+
+        // Also check if any context for this college and program matches
+        if (context.program && context.semester) {
+          for (const [k, v] of Object.entries(parsed.contexts || {})) {
+            if (k.includes(context.program) && k.includes(context.semester) && v.headerMetrics?.modulesList?.length > 0) {
+              return v.headerMetrics.modulesList;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+    return [];
+  }, [headerMetrics?.modulesList, context]);
+
+  const breakdown = useMemo(() => {
+    if (headerMetrics?.modulesBreakdown && (headerMetrics.modulesBreakdown.total > 0 || headerMetrics.modulesBreakdown.writ > 0)) {
+      return headerMetrics.modulesBreakdown;
+    }
+    return {
+      total: modulesList.length,
+      writ: modulesList.filter(m => m.examType === "WRIT" || m.examMode === "WRIT").length,
+      lab: modulesList.filter(m => m.examType === "LAB" || m.examMode === "LAB").length,
+      ica: modulesList.filter(m => m.examType === "ICA" || m.examMode === "ICA").length
+    };
+  }, [headerMetrics?.modulesBreakdown, modulesList]);
 
   const filteredModules = useMemo(() => {
     return modulesList.filter(mod => {
