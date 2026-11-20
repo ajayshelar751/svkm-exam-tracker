@@ -50,32 +50,42 @@ export default function ContextBar({
     }));
   };
 
-  // Student counts per semester for the current college/batch/program/cycle
-  const semesterStudentCounts = useMemo(() => {
-    const counts = {};
+  // Metrics & Active status per semester for current college/batch/program/cycle
+  const semesterMetrics = useMemo(() => {
+    const metricsMap = {};
     (config.semesters || []).forEach(s => {
       const key = getContextKey(context.college, context.batch, context.program, s, context.examCycle);
       const ctx = contexts[key];
       const m = ctx?.headerMetrics || {};
-      const tot = Number(m.totalStudents ?? (context.examCycle === "Re-Exam" ? ((m.regBatchStudents || 0) + (m.prevBatchStudents || 0)) : 0)) || 0;
-      counts[s] = tot;
+      const totStudents = Number(m.totalStudents ?? (context.examCycle === "Re-Exam" ? ((m.regBatchStudents || 0) + (m.prevBatchStudents || 0)) : 0)) || 0;
+      const numModules = Number(m.numModules || 0);
+      const modulesCount = Array.isArray(m.modulesList) ? m.modulesList.length : 0;
+      const effectiveModules = Math.max(numModules, modulesCount, Number(m.modulesBreakdown?.writ || 0));
+      metricsMap[s] = {
+        students: totStudents,
+        modules: effectiveModules,
+        isActive: totStudents > 0 || effectiveModules > 0
+      };
     });
-    return counts;
+    return metricsMap;
   }, [config.semesters, context.college, context.batch, context.program, context.examCycle, contexts]);
 
   const hasAnyActiveSem = useMemo(() => {
-    return Object.values(semesterStudentCounts).some(c => c > 0);
-  }, [semesterStudentCounts]);
+    return Object.values(semesterMetrics).some(c => c.isActive);
+  }, [semesterMetrics]);
 
   // Auto-switch to active semester if current one is inactive but other active semesters exist
   useEffect(() => {
-    if (hasAnyActiveSem && context.semester && semesterStudentCounts[context.semester] === 0) {
-      const firstActiveSem = (config.semesters || []).find(s => (semesterStudentCounts[s] || 0) > 0);
-      if (firstActiveSem && firstActiveSem !== context.semester) {
-        setContext(prev => ({ ...prev, semester: firstActiveSem }));
+    if (hasAnyActiveSem && context.semester) {
+      const curMetrics = semesterMetrics[context.semester];
+      if (!curMetrics?.isActive) {
+        const firstActiveSem = (config.semesters || []).find(s => semesterMetrics[s]?.isActive);
+        if (firstActiveSem && firstActiveSem !== context.semester) {
+          setContext(prev => ({ ...prev, semester: firstActiveSem }));
+        }
       }
     }
-  }, [hasAnyActiveSem, semesterStudentCounts, context.semester, config.semesters, setContext]);
+  }, [hasAnyActiveSem, semesterMetrics, context.semester, config.semesters, setContext]);
 
   // Authority to import/remove Excel data
   const hasExcelAuthority = Boolean(
@@ -181,8 +191,18 @@ export default function ContextBar({
               className="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
             >
               {config.semesters.map(s => {
-                const count = semesterStudentCounts[s] || 0;
-                const isInactive = hasAnyActiveSem && count === 0;
+                const met = semesterMetrics[s] || { students: 0, modules: 0, isActive: false };
+                const isInactive = hasAnyActiveSem && !met.isActive;
+                let badge = "";
+                if (met.students > 0 && met.modules > 0) {
+                  badge = `(${met.students} st / ${met.modules} mod)`;
+                } else if (met.students > 0) {
+                  badge = `(${met.students} st)`;
+                } else if (met.modules > 0) {
+                  badge = `(${met.modules} mod)`;
+                } else if (hasAnyActiveSem) {
+                  badge = "(0 - Inactive)";
+                }
                 return (
                   <option
                     key={s}
@@ -194,7 +214,7 @@ export default function ContextBar({
                         : "dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
                     }
                   >
-                    {s} {count > 0 ? `(${count})` : (hasAnyActiveSem ? "(0 - Inactive)" : "")}
+                    {s} {badge}
                   </option>
                 );
               })}

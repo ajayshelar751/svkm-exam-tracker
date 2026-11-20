@@ -131,14 +131,40 @@ export default function App() {
   }, []);
   const dbRef = useRef(null);
 
-  // Active Context
-  const [context, setContext] = useState(() => ({
-    college: "NMC",
-    batch: "2026-27",
-    program: "45611 - B.Com.",
-    semester: "Sem I",
-    examCycle: "Regular"
-  }));
+  // Active Context with Persistent LocalStorage Retention
+  const [context, setContextState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('svkm_active_context');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.college && parsed.program && parsed.semester && parsed.batch) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return {
+      college: "NMC",
+      batch: "2026-27",
+      program: "45611 - B.Com.",
+      semester: "Sem III", // Default to active Sem III instead of 0-student Sem I
+      examCycle: "Regular"
+    };
+  });
+
+  const setContext = (updater) => {
+    setContextState(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      try {
+        localStorage.setItem('svkm_active_context', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const contextsRef = useRef(contexts);
+  useEffect(() => {
+    contextsRef.current = contexts;
+  }, [contexts]);
 
   // Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -228,8 +254,28 @@ export default function App() {
         }
         if (res.data.activities) setActivities(sanitizeActivities(res.data.activities));
         if (res.data.contexts) {
-          // Pure Supabase Excel uploaded contexts
-          setContexts(res.data.contexts);
+          // Pure Supabase Excel uploaded contexts with Non-Zero Safety Merging
+          setContexts(prev => {
+            const merged = { ...prev };
+            Object.entries(res.data.contexts).forEach(([k, v]) => {
+              const cur = merged[k] || { headerMetrics: {}, logs: {} };
+              const curM = cur.headerMetrics || {};
+              const newM = v.headerMetrics || {};
+              merged[k] = {
+                ...v,
+                headerMetrics: {
+                  ...curM,
+                  ...newM,
+                  totalStudents: Math.max(Number(newM.totalStudents || 0), Number(curM.totalStudents || 0)),
+                  pwdStudents: Math.max(Number(newM.pwdStudents || 0), Number(curM.pwdStudents || 0)),
+                  numModules: Math.max(Number(newM.numModules || 0), Number(curM.numModules || 0)),
+                  modulesList: (Array.isArray(newM.modulesList) && newM.modulesList.length > 0) ? newM.modulesList : (curM.modulesList || undefined),
+                  modulesBreakdown: newM.modulesBreakdown || curM.modulesBreakdown || undefined
+                }
+              };
+            });
+            return merged;
+          });
         }
         setCloudStatus("CONNECTED");
         setLastSyncTime(new Date());
@@ -299,13 +345,35 @@ export default function App() {
             config,
             users,
             activities,
-            contexts
+            contexts: contextsRef.current
           });
           if (syncRes.success && syncRes.data) {
             if (syncRes.data.config) setConfig(c => ({ ...syncRes.data.config, examCycles: normalizeExamCycles(syncRes.data.config.examCycles) }));
             if (syncRes.data.users) setUsers(syncRes.data.users);
             if (syncRes.data.activities) setActivities(sanitizeActivities(syncRes.data.activities));
-            if (syncRes.data.contexts) setContexts(syncRes.data.contexts);
+            if (syncRes.data.contexts) {
+              setContexts(prev => {
+                const merged = { ...prev };
+                Object.entries(syncRes.data.contexts).forEach(([k, v]) => {
+                  const cur = merged[k] || { headerMetrics: {}, logs: {} };
+                  const curM = cur.headerMetrics || {};
+                  const newM = v.headerMetrics || {};
+                  merged[k] = {
+                    ...v,
+                    headerMetrics: {
+                      ...curM,
+                      ...newM,
+                      totalStudents: Math.max(Number(newM.totalStudents || 0), Number(curM.totalStudents || 0)),
+                      pwdStudents: Math.max(Number(newM.pwdStudents || 0), Number(curM.pwdStudents || 0)),
+                      numModules: Math.max(Number(newM.numModules || 0), Number(curM.numModules || 0)),
+                      modulesList: (Array.isArray(newM.modulesList) && newM.modulesList.length > 0) ? newM.modulesList : (curM.modulesList || undefined),
+                      modulesBreakdown: newM.modulesBreakdown || curM.modulesBreakdown || undefined
+                    }
+                  };
+                });
+                return merged;
+              });
+            }
             setCloudStatus("CONNECTED");
             setLastSyncTime(new Date());
             console.log('%c[Realtime:FallbackSync] 30s background sync complete. Consistent.', 'color: #10b981; font-size: 11px;');

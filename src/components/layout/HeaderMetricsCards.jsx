@@ -31,7 +31,15 @@ export default function HeaderMetricsCards({
   const displayMonthYear = metrics.examMonthYear ?? autoDerivedMonthYear ?? "";
   const isAutoSynced = autoDerivedMonthYear && (metrics.examMonthYear === autoDerivedMonthYear || !metrics.examMonthYear);
 
-  const hasExcelData = (metrics.totalStudents > 0) || metrics.isUploadedFromExcel;
+  const effectiveWritModules = (metrics.numModules !== undefined && metrics.numModules !== null && metrics.numModules > 0)
+    ? metrics.numModules
+    : (metrics.modulesBreakdown?.writ || (Array.isArray(metrics.modulesList) && metrics.modulesList.length > 0 ? metrics.modulesList.filter(m => m.examType === "WRIT").length : 0));
+
+  const totalSubjectCount = (metrics.modulesBreakdown?.total > 0)
+    ? metrics.modulesBreakdown.total
+    : (Array.isArray(metrics.modulesList) ? metrics.modulesList.length : (effectiveWritModules || 0));
+
+  const hasExcelData = (metrics.totalStudents > 0) || (effectiveWritModules > 0) || (totalSubjectCount > 0) || Boolean(metrics.isUploadedFromExcel);
 
   return (
     <div className="my-2.5 no-print">
@@ -107,10 +115,12 @@ export default function HeaderMetricsCards({
           </div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-base font-bold text-slate-900 dark:text-white">
-              {(metrics.numModules !== undefined && metrics.numModules !== null && metrics.numModules > 0) ? metrics.numModules : (metrics.modulesBreakdown?.writ || "—")}
+              {effectiveWritModules > 0 ? effectiveWritModules : (totalSubjectCount > 0 ? totalSubjectCount : "—")}
             </span>
-            {Boolean((metrics.numModules && metrics.numModules > 0) || metrics.modulesBreakdown?.writ) && (
-              <span className="text-xs font-semibold text-slate-400">WRIT</span>
+            {Boolean(effectiveWritModules > 0 || totalSubjectCount > 0) && (
+              <span className="text-xs font-semibold text-slate-400">
+                {effectiveWritModules > 0 ? "WRIT" : "SUBS"}
+              </span>
             )}
           </div>
           <div className="text-[10px] text-slate-400">
@@ -118,8 +128,8 @@ export default function HeaderMetricsCards({
               <span className="truncate block font-mono text-[9px] text-slate-500 dark:text-slate-400">
                 {metrics.modulesBreakdown.writ || 0}W · {metrics.modulesBreakdown.lab || 0}L · {metrics.modulesBreakdown.ica || 0}I
               </span>
-            ) : metrics.numModules > 0 ? (
-              `${metrics.numModules} Active Papers`
+            ) : totalSubjectCount > 0 ? (
+              `${totalSubjectCount} Ingested Papers`
             ) : (
               "Pending Acad Report"
             )}

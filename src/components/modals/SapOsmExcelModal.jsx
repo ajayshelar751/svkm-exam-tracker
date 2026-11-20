@@ -618,6 +618,9 @@ export default function SapOsmExcelModal({
       ...targetExisting,
       totalStudents: finalTotal,
       pwdStudents: finalPwd,
+      numModules: targetExisting.numModules || 0,
+      modulesBreakdown: targetExisting.modulesBreakdown,
+      modulesList: targetExisting.modulesList,
       batch: targetBatch,
       isUploadedFromExcel: true,
       lastImportedFile: fileName || parsedData?.fileName
@@ -650,9 +653,13 @@ export default function SapOsmExcelModal({
     }
 
     const targetExisting = contexts?.[targetKey]?.headerMetrics || {};
+    const existingStudents = targetExisting.totalStudents || contexts?.[targetKey]?.headerMetrics?.totalStudents || 0;
+    const existingPwd = targetExisting.pwdStudents || contexts?.[targetKey]?.headerMetrics?.pwdStudents || 0;
 
     onApplyMetrics({
       ...targetExisting,
+      totalStudents: existingStudents,
+      pwdStudents: existingPwd,
       numModules: cohort.writCount, // Primary KPI on card is Total WRIT Theory
       modulesBreakdown: cohort.modulesBreakdown,
       modulesList: cohort.modulesList,

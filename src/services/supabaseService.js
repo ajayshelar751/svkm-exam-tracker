@@ -517,7 +517,12 @@ export class SupabaseService {
             // Intelligent Non-Zero Merging: never let empty or unpopulated zero values overwrite valid imported counts
             const totalStudents = Math.max(Number(dm?.total_students || 0), Number(existingLocalMetrics.totalStudents || 0));
             const pwdStudents = Math.max(Number(dm?.pwd_students || 0), Number(existingLocalMetrics.pwdStudents || 0));
-            const numModules = Math.max(Number(dm?.num_modules || 0), Number(existingLocalMetrics.numModules || 0));
+            const numModules = Math.max(
+              Number(dm?.num_modules || 0),
+              Number(existingLocalMetrics.numModules || 0),
+              Number(dmExtra.modulesBreakdown?.writ || 0),
+              Number(cloudCached.modulesBreakdown?.writ || 0)
+            );
             const debarredStudents = Math.max(Number(dm?.debarred_students || 0), Number(existingLocalMetrics.debarredStudents || 0));
             const ufmCases = Math.max(Number(dm?.ufm_cases || 0), Number(existingLocalMetrics.ufmCases || 0));
 
@@ -1262,36 +1267,51 @@ export class SupabaseService {
                 if (!row || !row.session_id) return;
                 console.log(`%c[Realtime:EventReceived] dashboard_metrics (${payload.eventType}): Session ${row.session_id}`, 'color: #3b82f6; font-weight: bold;');
 
-                const mergeWithExisting = (prevMetrics = {}) => {
+                const mergeWithExisting = (prevMetrics = {}, cKey = "") => {
+                  const localCached = (cKey ? SupabaseService.getLocalData()?.contexts?.[cKey]?.headerMetrics : null) || {};
                   const extra = row.extra_metrics || {};
-                  const totalStudents = (row.total_students !== undefined && row.total_students > 0)
-                    ? row.total_students
-                    : (prevMetrics.totalStudents || 0);
-                  const pwdStudents = (row.pwd_students !== undefined && row.pwd_students > 0)
-                    ? row.pwd_students
-                    : (prevMetrics.pwdStudents || 0);
-                  const numModules = (row.num_modules !== undefined && row.num_modules > 0)
-                    ? row.num_modules
-                    : (prevMetrics.numModules || 0);
+                  const totalStudents = Math.max(
+                    Number(row.total_students !== undefined ? row.total_students : 0),
+                    Number(prevMetrics.totalStudents || 0),
+                    Number(localCached.totalStudents || 0)
+                  );
+                  const pwdStudents = Math.max(
+                    Number(row.pwd_students !== undefined ? row.pwd_students : 0),
+                    Number(prevMetrics.pwdStudents || 0),
+                    Number(localCached.pwdStudents || 0)
+                  );
+                  const numModules = Math.max(
+                    Number(row.num_modules !== undefined ? row.num_modules : 0),
+                    Number(prevMetrics.numModules || 0),
+                    Number(localCached.numModules || 0),
+                    Number(extra.modulesBreakdown?.writ || 0),
+                    Number(prevMetrics.modulesBreakdown?.writ || 0),
+                    Number(localCached.modulesBreakdown?.writ || 0)
+                  );
                   const modulesList = (Array.isArray(extra.modulesList) && extra.modulesList.length > 0)
                     ? extra.modulesList
-                    : (prevMetrics.modulesList || undefined);
-                  const modulesBreakdown = extra.modulesBreakdown || prevMetrics.modulesBreakdown || undefined;
+                    : (Array.isArray(prevMetrics.modulesList) && prevMetrics.modulesList.length > 0)
+                    ? prevMetrics.modulesList
+                    : (Array.isArray(localCached.modulesList) && localCached.modulesList.length > 0)
+                    ? localCached.modulesList
+                    : undefined;
+                  const modulesBreakdown = extra.modulesBreakdown || prevMetrics.modulesBreakdown || localCached.modulesBreakdown || undefined;
 
                   return {
+                    ...localCached,
                     ...prevMetrics,
-                    batch: row.batch_year || prevMetrics.batch || '',
+                    batch: row.batch_year || prevMetrics.batch || localCached.batch || '',
                     totalStudents,
                     pwdStudents,
-                    debarredStudents: row.debarred_students || prevMetrics.debarredStudents || 0,
-                    ufmCases: row.ufm_cases || prevMetrics.ufmCases || 0,
+                    debarredStudents: Math.max(Number(row.debarred_students || 0), Number(prevMetrics.debarredStudents || 0), Number(localCached.debarredStudents || 0)),
+                    ufmCases: Math.max(Number(row.ufm_cases || 0), Number(prevMetrics.ufmCases || 0), Number(localCached.ufmCases || 0)),
                     numModules,
-                    regBatchStudents: row.reg_batch_students || prevMetrics.regBatchStudents || 0,
-                    prevBatchStudents: row.prev_batch_students || prevMetrics.prevBatchStudents || 0,
-                    appearingBatches: row.appearing_batches || prevMetrics.appearingBatches || '',
-                    numPrograms: row.num_programs || prevMetrics.numPrograms || 1,
-                    examMonthYear: row.exam_month_year || prevMetrics.examMonthYear || '',
-                    isUploadedFromExcel: totalStudents > 0 || numModules > 0 || Boolean(prevMetrics.isUploadedFromExcel),
+                    regBatchStudents: row.reg_batch_students ?? prevMetrics.regBatchStudents ?? localCached.regBatchStudents ?? 0,
+                    prevBatchStudents: row.prev_batch_students ?? prevMetrics.prevBatchStudents ?? localCached.prevBatchStudents ?? 0,
+                    appearingBatches: row.appearing_batches || prevMetrics.appearingBatches || localCached.appearingBatches || '',
+                    numPrograms: row.num_programs || prevMetrics.numPrograms || localCached.numPrograms || 1,
+                    examMonthYear: row.exam_month_year || prevMetrics.examMonthYear || localCached.examMonthYear || '',
+                    isUploadedFromExcel: totalStudents > 0 || numModules > 0 || Boolean(prevMetrics.isUploadedFromExcel) || Boolean(localCached.isUploadedFromExcel),
                     modulesList,
                     modulesBreakdown
                   };
@@ -1305,7 +1325,7 @@ export class SupabaseService {
                       ...contexts,
                       [syncKey]: {
                         ...ctx,
-                        headerMetrics: mergeWithExisting(ctx.headerMetrics)
+                        headerMetrics: mergeWithExisting(ctx.headerMetrics, syncKey)
                       }
                     };
                   });
@@ -1318,7 +1338,7 @@ export class SupabaseService {
                         ...contexts,
                         [resolvedKey]: {
                           ...ctx,
-                          headerMetrics: mergeWithExisting(ctx.headerMetrics)
+                          headerMetrics: mergeWithExisting(ctx.headerMetrics, resolvedKey)
                         }
                       };
                     });
@@ -1379,25 +1399,29 @@ export class SupabaseService {
                 console.log(`%c[Realtime:EventReceived] exam_sessions (${payload.eventType}): ContextKey: ${row.context_key}`, 'color: #3b82f6; font-weight: bold;');
 
                 queueContextPatch((contexts) => {
+                  const existingLocal = SupabaseService.getLocalData()?.contexts?.[row.context_key] || {};
                   if (contexts[row.context_key]) {
-                    if (row.exam_month_year) {
-                      const cur = contexts[row.context_key];
-                      return {
-                        ...contexts,
-                        [row.context_key]: {
-                          ...cur,
-                          headerMetrics: {
-                            ...(cur.headerMetrics || {}),
-                            examMonthYear: row.exam_month_year
-                          }
+                    const cur = contexts[row.context_key];
+                    return {
+                      ...contexts,
+                      [row.context_key]: {
+                        ...cur,
+                        headerMetrics: {
+                          ...(cur.headerMetrics || existingLocal.headerMetrics || {}),
+                          examMonthYear: row.exam_month_year || cur.headerMetrics?.examMonthYear || existingLocal.headerMetrics?.examMonthYear || ''
                         }
-                      };
-                    }
-                    return contexts;
+                      }
+                    };
                   }
                   return {
                     ...contexts,
-                    [row.context_key]: { headerMetrics: { examMonthYear: row.exam_month_year || '' }, logs: {} }
+                    [row.context_key]: {
+                      headerMetrics: {
+                        ...(existingLocal.headerMetrics || {}),
+                        examMonthYear: row.exam_month_year || existingLocal.headerMetrics?.examMonthYear || ''
+                      },
+                      logs: existingLocal.logs || {}
+                    }
                   };
                 });
               } else if (payload.eventType === 'DELETE') {
