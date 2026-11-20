@@ -116,9 +116,29 @@ export default function SapOsmExcelModal({
         });
 
         // ==========================================
-        // 1. SAP STUDENT MASTER PARSER
+        // 1. SAP STUDENT MASTER PARSER [ZST_MASTERDATA_MULTI]
         // ==========================================
         if (activeTab === "sap") {
+          // Strict column structure validation for SAP Student Master [ZST_MASTERDATA_MULTI]
+          const requiredSapFields = [
+            { label: "Program Code", pattern: /program\s*code/i },
+            { label: "Student Roll No.", pattern: /student\s*roll\s*no|roll\s*no/i },
+            { label: "Student Number", pattern: /student\s*number/i },
+            { label: "Academic Sess", pattern: /academic\s*sess/i },
+            { label: "Last Name", pattern: /last\s*name/i },
+            { label: "First Name", pattern: /first\s*name/i },
+            { label: "Father First Name", pattern: /father\s*first\s*name/i },
+            { label: "Disability", pattern: /disability/i }
+          ];
+
+          const missingSapFields = requiredSapFields.filter(f => 
+            !availableCols.some(col => f.pattern.test(col.trim()))
+          ).map(f => f.label);
+
+          if (missingSapFields.length > 0) {
+            throw new Error(`Invalid Excel structure for SAP Student Master [ZST_MASTERDATA_MULTI]. Missing required columns: ${missingSapFields.join(", ")}. Please ensure you are uploading the official SAP ZST_MASTERDATA_MULTI export file.`);
+          }
+
           const collegeVotes = {};
           const detectedYears = new Set();
           const cohortsMap = {};
@@ -155,8 +175,24 @@ export default function SapOsmExcelModal({
 
             const disKey = keys.find(k => /disability/i.test(k));
             const disVal = disKey ? String(row[disKey] || "").trim() : "";
-            const isPwd = disVal && disVal.toLowerCase() !== "none" && disVal !== "-" && disVal !== "0";
+            const isPwd = Boolean(disVal && !['none', 'no', 'n', 'nil', '', 'na', 'n/a', '-', '0'].includes(disVal.toLowerCase()));
             if (isPwd) totalPwdInFile++;
+
+            const rollKey = keys.find(k => /student\s*roll\s*no|roll\s*no/i.test(k));
+            const rollNo = rollKey ? String(row[rollKey] || "").trim() : "";
+
+            const studNumKey = keys.find(k => /student\s*number/i.test(k)) || keys.find(k => /sap\s*id|student\s*id/i.test(k));
+            const studentNumber = studNumKey ? String(row[studNumKey] || "").trim() : "";
+
+            const lastNameKey = keys.find(k => /last\s*name/i.test(k));
+            const firstNameKey = keys.find(k => /first\s*name/i.test(k));
+            const fatherNameKey = keys.find(k => /father\s*first\s*name/i.test(k));
+
+            const lastName = lastNameKey ? String(row[lastNameKey] || "").trim() : "";
+            const firstName = firstNameKey ? String(row[firstNameKey] || "").trim() : "";
+            const fatherName = fatherNameKey ? String(row[fatherNameKey] || "").trim() : "";
+
+            const fullName = [lastName, firstName, fatherName].filter(Boolean).join(" ");
 
             const { collegeId, matchedProgram } = matchProgramInConfig(pCode);
             if (collegeId) {
@@ -172,11 +208,20 @@ export default function SapOsmExcelModal({
                 semester: semMapped,
                 sessionCode: sessRaw,
                 studentCount: 0,
-                pwdCount: 0
+                pwdCount: 0,
+                studentsList: []
               };
             }
             cohortsMap[cohortKey].studentCount++;
             if (isPwd) cohortsMap[cohortKey].pwdCount++;
+
+            cohortsMap[cohortKey].studentsList.push({
+              studentNumber,
+              rollNo,
+              name: fullName || studentNumber || `Student ${cohortsMap[cohortKey].studentCount}`,
+              disability: disVal || "None",
+              isPwd
+            });
           });
 
           let detectedCollege = null;
@@ -200,7 +245,10 @@ export default function SapOsmExcelModal({
             }
           }
 
-          const cohortsList = Object.values(cohortsMap).sort((a, b) => {
+          const cohortsList = Object.values(cohortsMap).map(c => {
+            c.studentsList.sort((a, b) => (a.rollNo || "").localeCompare(b.rollNo || "", undefined, { numeric: true }));
+            return c;
+          }).sort((a, b) => {
             if (a.programCode !== b.programCode) return a.programCode.localeCompare(b.programCode);
             return a.semester.localeCompare(b.semester);
           });
@@ -224,9 +272,31 @@ export default function SapOsmExcelModal({
           });
         }
         // ==========================================
-        // 2. ACAD REPORT (MODULES & COHORTS) PARSER
+        // 2. AUDIT REPORT (MODULES & COHORTS) PARSER [ZAUDIT_REPORT]
         // ==========================================
         else if (activeTab === "acad_report") {
+          // Strict column structure validation for Audit Report [ZAUDIT_REPORT]
+          const requiredAuditFields = [
+            { label: "School Name", pattern: /school\s*name/i },
+            { label: "Program Abbreviation", pattern: /program\s*abbreviation|program\s*abbrev/i },
+            { label: "Program Name", pattern: /program\s*name/i },
+            { label: "Current Academic Year", pattern: /current\s*academic\s*year/i },
+            { label: "Current Session", pattern: /current\s*session/i },
+            { label: "Module Abbreviation", pattern: /module\s*abbreviation|module\s*abbrev/i },
+            { label: "Module Description", pattern: /module\s*description|module\s*desc/i },
+            { label: "Booked Students", pattern: /booked\s*students|registered\s*students/i },
+            { label: "Exam mode", pattern: /exam\s*mode/i },
+            { label: "Only for NUE (Y / N)", pattern: /only\s*for\s*nue|only\s*ica/i }
+          ];
+
+          const missingAuditFields = requiredAuditFields.filter(f => 
+            !availableCols.some(col => f.pattern.test(col.trim()))
+          ).map(f => f.label);
+
+          if (missingAuditFields.length > 0) {
+            throw new Error(`Invalid Excel structure for Audit Report [ZAUDIT_REPORT]. Missing required columns: ${missingAuditFields.join(", ")}. Please ensure you are uploading the official SAP ZAUDIT_REPORT export file.`);
+          }
+
           // Identify columns with robust pattern matching
           const schoolCol = availableCols.find(k => /school\s*name|college\s*name|institution/i.test(k));
           const acadYearCol = availableCols.find(k => /current.*acad.*year|academic.*year/i.test(k));
@@ -618,6 +688,7 @@ export default function SapOsmExcelModal({
       ...targetExisting,
       totalStudents: finalTotal,
       pwdStudents: finalPwd,
+      studentsList: cohort.studentsList || targetExisting.studentsList,
       numModules: targetExisting.numModules || 0,
       modulesBreakdown: targetExisting.modulesBreakdown,
       modulesList: targetExisting.modulesList,
@@ -870,8 +941,8 @@ export default function SapOsmExcelModal({
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-1.5">
             {[
-              { id: "sap", label: "1. SAP Student Master", icon: "users", badge: "Cohorts & PWD" },
-              { id: "acad_report", label: "2. Acad Report", icon: "layers", badge: "Debarred & Modules" },
+              { id: "sap", label: "1. SAP Student Master", icon: "users", badge: "[ZST_MASTERDATA_MULTI]" },
+              { id: "acad_report", label: "2. Audit Report", icon: "layers", badge: "[ZAUDIT_REPORT]" },
               { id: "osm", label: "3. OSM Evaluation", icon: "check-circle", badge: "Evaluated Scripts" },
               { id: "calling_sheet", label: "4. Calling Sheet", icon: "grid", badge: "Seating" },
               { id: "custom", label: "5. Column Mapper", icon: "sliders", badge: "Universal" },
@@ -1052,8 +1123,8 @@ export default function SapOsmExcelModal({
                   </div>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 text-center">
                     {fileName ? fileName : (
-                      activeTab === 'sap' ? 'Select or Drop SAP Student Master Excel (e.g. NMC Student Master Data 2026.XLSX)' :
-                      activeTab === 'acad_report' ? 'Select or Drop Acad Report Excel (Attendance, Eligibility & Course Modules)' :
+                      activeTab === 'sap' ? 'Select or Drop SAP Student Master [ZST_MASTERDATA_MULTI] Excel (.xlsx / .xls)' :
+                      activeTab === 'acad_report' ? 'Select or Drop Audit Report [ZAUDIT_REPORT] Excel (.xlsx / .xls)' :
                       activeTab === 'osm' ? 'Select or Drop OSM Evaluation Raw Excel' :
                       activeTab === 'calling_sheet' ? 'Select or Drop Calling Sheet / Seating Excel' :
                       'Select or Drop any Excel Spreadsheet (.xlsx, .xls, .csv)'

@@ -537,6 +537,13 @@ export class SupabaseService {
 
             const modulesBreakdown = dmExtra.modulesBreakdown || existingLocalMetrics.modulesBreakdown || cloudCached.modulesBreakdown || undefined;
 
+            // Student lists retrieval priority: Database extra_metrics -> Local Storage
+            const studentsList = (Array.isArray(dmExtra.studentsList) && dmExtra.studentsList.length > 0)
+              ? dmExtra.studentsList
+              : (Array.isArray(existingLocalMetrics.studentsList) && existingLocalMetrics.studentsList.length > 0)
+              ? existingLocalMetrics.studentsList
+              : undefined;
+
             const headerMetrics = {
               ...existingLocalMetrics,
               batch: (dm && dm.batch_year) || existingLocalMetrics.batch || batchFromKey,
@@ -552,7 +559,8 @@ export class SupabaseService {
               examMonthYear: (dm && dm.exam_month_year) || sess.exam_month_year || existingLocalMetrics.examMonthYear || "",
               isUploadedFromExcel: totalStudents > 0 || numModules > 0 || Boolean(existingLocalMetrics.isUploadedFromExcel),
               modulesList,
-              modulesBreakdown
+              modulesBreakdown,
+              studentsList
             };
 
             const logs = {};
@@ -829,6 +837,7 @@ export class SupabaseService {
         ...existingExtra,
         modulesList: (Array.isArray(headerMetrics.modulesList) && headerMetrics.modulesList.length > 0) ? headerMetrics.modulesList : (existingExtra.modulesList || undefined),
         modulesBreakdown: headerMetrics.modulesBreakdown || existingExtra.modulesBreakdown || undefined,
+        studentsList: (Array.isArray(headerMetrics.studentsList) && headerMetrics.studentsList.length > 0) ? headerMetrics.studentsList : (existingExtra.studentsList || undefined),
         lastImportedFile: headerMetrics.lastImportedFile || existingExtra.lastImportedFile || undefined,
         updatedAt: new Date().toISOString()
       };
@@ -1297,6 +1306,14 @@ export class SupabaseService {
                     : undefined;
                   const modulesBreakdown = extra.modulesBreakdown || prevMetrics.modulesBreakdown || localCached.modulesBreakdown || undefined;
 
+                  const studentsList = (Array.isArray(extra.studentsList) && extra.studentsList.length > 0)
+                    ? extra.studentsList
+                    : (Array.isArray(prevMetrics.studentsList) && prevMetrics.studentsList.length > 0)
+                    ? prevMetrics.studentsList
+                    : (Array.isArray(localCached.studentsList) && localCached.studentsList.length > 0)
+                    ? localCached.studentsList
+                    : undefined;
+
                   return {
                     ...localCached,
                     ...prevMetrics,
@@ -1313,7 +1330,8 @@ export class SupabaseService {
                     examMonthYear: row.exam_month_year || prevMetrics.examMonthYear || localCached.examMonthYear || '',
                     isUploadedFromExcel: totalStudents > 0 || numModules > 0 || Boolean(prevMetrics.isUploadedFromExcel) || Boolean(localCached.isUploadedFromExcel),
                     modulesList,
-                    modulesBreakdown
+                    modulesBreakdown,
+                    studentsList
                   };
                 };
 

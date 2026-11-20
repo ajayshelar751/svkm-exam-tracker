@@ -674,6 +674,24 @@ export default function App() {
         }
       }
 
+      if (item.studentsList && Array.isArray(item.studentsList) && item.studentsList.length > 0) {
+        if (mode === "merge") {
+          const existingList = prevCtx.headerMetrics?.studentsList || [];
+          const existingIds = new Set(existingList.map(s => s.studentNumber));
+          const mergedList = [...existingList];
+          item.studentsList.forEach(s => {
+            if (!existingIds.has(s.studentNumber)) {
+              mergedList.push(s);
+            }
+          });
+          updatedMetrics.studentsList = mergedList;
+        } else {
+          updatedMetrics.studentsList = item.studentsList;
+        }
+      } else if (prevCtx.headerMetrics?.studentsList) {
+        updatedMetrics.studentsList = prevCtx.headerMetrics.studentsList;
+      }
+
       if (item.numModules !== undefined && item.numModules > 0) {
         updatedMetrics.numModules = item.numModules;
       }
@@ -983,6 +1001,9 @@ export default function App() {
       modulesList: (Array.isArray(metrics.modulesList) && metrics.modulesList.length > 0)
         ? metrics.modulesList
         : (prevMetrics.modulesList || undefined),
+      studentsList: (Array.isArray(metrics.studentsList) && metrics.studentsList.length > 0)
+        ? metrics.studentsList
+        : (prevMetrics.studentsList || undefined),
       batch: metrics.batch || prevMetrics.batch || targetKey.split('__')[1] || "",
       isUploadedFromExcel: Boolean(metrics.isUploadedFromExcel || prevMetrics.isUploadedFromExcel || (metrics.totalStudents > 0) || (prevMetrics.totalStudents > 0) || (metrics.numModules > 0))
     };
