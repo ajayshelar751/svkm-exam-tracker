@@ -587,26 +587,31 @@ export default function App() {
       previousSnapshot[ctxKey] = { ...(prevCtx.headerMetrics || {}) };
       affectedContextKeys.push(ctxKey);
 
-      let updatedMetrics;
-      if (mode === "merge") {
-        updatedMetrics = {
-          ...(prevCtx.headerMetrics || {}),
-          batch: detectedBatch,
-          totalStudents: (prevCtx.headerMetrics?.totalStudents || 0) + (item.studentCount || 0),
-          pwdStudents: (prevCtx.headerMetrics?.pwdStudents || 0) + (item.pwdCount || 0),
-          isUploadedFromExcel: true,
-          lastImportedFile: fileName
-        };
-      } else {
-        // Clean Replace / Overwrite
-        updatedMetrics = {
-          ...(prevCtx.headerMetrics || {}),
-          batch: detectedBatch,
-          totalStudents: item.studentCount || 0,
-          pwdStudents: item.pwdCount || 0,
-          isUploadedFromExcel: true,
-          lastImportedFile: fileName
-        };
+      let updatedMetrics = {
+        ...(prevCtx.headerMetrics || {}),
+        batch: detectedBatch,
+        isUploadedFromExcel: true,
+        lastImportedFile: fileName
+      };
+
+      if (item.studentCount !== undefined) {
+        if (mode === "merge") {
+          updatedMetrics.totalStudents = (prevCtx.headerMetrics?.totalStudents || 0) + (item.studentCount || 0);
+          updatedMetrics.pwdStudents = (prevCtx.headerMetrics?.pwdStudents || 0) + (item.pwdCount || 0);
+        } else {
+          updatedMetrics.totalStudents = item.studentCount || 0;
+          updatedMetrics.pwdStudents = item.pwdCount || 0;
+        }
+      }
+
+      if (item.numModules !== undefined) {
+        updatedMetrics.numModules = item.numModules;
+      }
+      if (item.modulesBreakdown) {
+        updatedMetrics.modulesBreakdown = item.modulesBreakdown;
+      }
+      if (item.modulesList) {
+        updatedMetrics.modulesList = item.modulesList;
       }
 
       nextContexts[ctxKey] = {

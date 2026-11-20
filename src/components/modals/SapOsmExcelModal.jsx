@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import Icon from '../common/Icon.jsx';
 import { getTodayYYYYMMDD, formatDateDisplay } from '../../utils/helpers.js';
+import SessionModulesModal from './SessionModulesModal.jsx';
 
 // --- Enterprise Excel Import, Metric Parser & File Rollback Hub ---
 export default function SapOsmExcelModal({
@@ -34,6 +35,7 @@ export default function SapOsmExcelModal({
   const [importMode, setImportMode] = useState("replace"); // 'replace' | 'selective' | 'merge'
   const [selectedCohorts, setSelectedCohorts] = useState({});
   const [showDebarredModal, setShowDebarredModal] = useState(false);
+  const [previewCohortSubjects, setPreviewCohortSubjects] = useState(null);
   const [customColMap, setCustomColMap] = useState({
     studentCol: "",
     pwdCol: "",
@@ -222,64 +224,267 @@ export default function SapOsmExcelModal({
           });
         }
         // ==========================================
-        // 2. ACAD REPORT (MODULES & DEBARRED) PARSER
+        // 2. ACAD REPORT (MODULES & COHORTS) PARSER
         // ==========================================
         else if (activeTab === "acad_report") {
+          // Identify columns with robust pattern matching
+          const schoolCol = availableCols.find(k => /school\s*name|college\s*name|institution/i.test(k));
+          const acadYearCol = availableCols.find(k => /current.*acad.*year|academic.*year/i.test(k));
+          const progAbbrevCol = availableCols.find(k => /program\s*abbrev/i.test(k)) || availableCols.find(k => /prog.*code|program/i.test(k));
+          const progNameCol = availableCols.find(k => /program\s*name/i.test(k));
+          const sessionCol = availableCols.find(k => /current\s*session|semester|session/i.test(k));
+          const modAbbrevCol = availableCols.find(k => /module\s*abbrev|course\s*abbrev|subject\s*code|module\s*code|course\s*code/i.test(k)) || availableCols.find(k => /module|course|subject/i.test(k));
+          const modDescCol = availableCols.find(k => /module\s*desc|course\s*desc|module\s*name|subject\s*desc|subject\s*name/i.test(k));
+          const bookedCol = availableCols.find(k => /booked\s*stud|enrolled/i.test(k));
+          const examModeCol = availableCols.find(k => /exam\s*mode|^mode$/i.test(k));
+          const onlyIcaCol = availableCols.find(k => /only\s*ica/i.test(k));
+          const onlyNueCol = availableCols.find(k => /only.*nue/i.test(k));
+          const scale1Col = availableCols.find(k => /appraisal.*1.*scale|type\s*1.*scale|scale\s*1/i.test(k));
+          const scale2Col = availableCols.find(k => /appraisal.*2.*scale|type\s*2.*scale|scale\s*2/i.test(k));
+          const creditCol = availableCols.find(k => /module\s*credit|credits?/i.test(k));
+          const durationCol = availableCols.find(k => /duration/i.test(k));
+          const debarCol = availableCols.find(k => /debar|defaulter|attendance.*%|eligib|status/i.test(k));
+          const studentIdCol = availableCols.find(k => /student.*id|sap.*id|roll.*no|enroll/i.test(k));
+
+          // Helper to normalize semester strings (e.g. "Semester I", "Sem 1", "16" -> "Sem I")
+          const normalizeSemester = (val) => {
+            if (!val) return "Sem I";
+            const s = String(val).trim();
+            if (/^(sem|semester)?\s*i$/i.test(s) || s === "1" || s === "16") return "Sem I";
+            if (/^(sem|semester)?\s*ii$/i.test(s) || s === "2" || s === "17") return "Sem II";
+            if (/^(sem|semester)?\s*iii$/i.test(s) || s === "3" || s === "18") return "Sem III";
+            if (/^(sem|semester)?\s*iv$/i.test(s) || s === "4" || s === "19") return "Sem IV";
+            if (/^(sem|semester)?\s*v$/i.test(s) || s === "5" || s === "20") return "Sem V";
+            if (/^(sem|semester)?\s*vi$/i.test(s) || s === "6" || s === "21") return "Sem VI";
+            if (/^(sem|semester)?\s*vii$/i.test(s) || s === "7" || s === "22") return "Sem VII";
+            if (/^(sem|semester)?\s*viii$/i.test(s) || s === "8" || s === "23") return "Sem VIII";
+            if (/^sem/i.test(s)) return s;
+            return "Sem " + s;
+          };
+
+          // Helper to strip "S0" from marks appraisal scale (e.g. S040 -> 40, S060 -> 60)
+          const stripS0 = (val) => {
+            if (val === null || val === undefined) return "";
+            const str = String(val).trim();
+            return str.replace(/^S0/i, "").trim();
+          };
+
+          // College identification by school name voting
+          let detectedCollege = context?.college || "NMC";
+          if (schoolCol) {
+            const schoolVotes = {};
+            rawJson.forEach(row => {
+              const sc = String(row[schoolCol] || "").trim();
+              if (sc) schoolVotes[sc] = (schoolVotes[sc] || 0) + 1;
+            });
+            const topSchool = Object.entries(schoolVotes).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+            if (/narsee|nmc|nm\b/i.test(topSchool)) {
+              detectedCollege = "NMC";
+            } else if (/usha|upg/i.test(topSchool)) {
+              detectedCollege = "UPG";
+            } else if (/mithibai/i.test(topSchool)) {
+              detectedCollege = "MITHIBAI";
+            } else if (config?.colleges) {
+              const matched = config.colleges.find(c => topSchool.toLowerCase().includes(c.id.toLowerCase()) || topSchool.toLowerCase().includes(c.name.toLowerCase()));
+              if (matched) detectedCollege = matched.id;
+            }
+          }
+
+          // Academic Year identification
+          let normalizedYear = context?.batch || "2026-27";
+          if (acadYearCol) {
+            const yrRow = rawJson.find(r => r[acadYearCol] && String(r[acadYearCol]).trim());
+            if (yrRow) {
+              const yrVal = String(yrRow[acadYearCol]).trim();
+              if (/^\d{4}$/.test(yrVal)) {
+                const yNum = parseInt(yrVal, 10);
+                normalizedYear = `${yNum}-${String(yNum + 1).slice(-2)}`;
+              } else if (yrVal) {
+                normalizedYear = yrVal;
+              }
+            }
+          }
+
+          const cohortsMap = {};
+          let totalBookedAcrossFile = 0;
+          let totalWritAcrossFile = 0;
+          let totalLabAcrossFile = 0;
+          let totalIcaAcrossFile = 0;
+          const globalModuleSet = new Set();
           let debarredCount = 0;
-          const detectedModules = new Set();
-          const studentSet = new Set();
           const debarredList = [];
 
           rawJson.forEach(row => {
-            const keys = Object.keys(row);
-            
-            // Find student identifier
-            const idKey = keys.find(k => /student.*id|sap.*id|roll.*no|enroll/i.test(k)) || keys[0];
-            const studentId = String(row[idKey] || "").trim();
-            if (studentId) studentSet.add(studentId);
-
-            // Find subject/module/course
-            const modKey = keys.find(k => /module|course|subject|paper/i.test(k));
-            if (modKey && row[modKey]) {
-              const modVal = String(row[modKey]).trim();
-              if (modVal) detectedModules.add(modVal);
+            // Check booked students > 0
+            let bookedNum = 0;
+            if (bookedCol && row[bookedCol] !== undefined && row[bookedCol] !== "") {
+              bookedNum = parseInt(row[bookedCol], 10);
+              if (isNaN(bookedNum)) bookedNum = 0;
+            } else {
+              bookedNum = 1; // Default to 1 if booked students column absent
             }
 
-            // Find debarred / attendance status
-            const debKey = keys.find(k => /debar|defaulter|attendance.*%|eligib|status|remarks/i.test(k));
-            let isDebarred = false;
-            if (debKey && row[debKey]) {
-              const val = String(row[debKey]).trim().toLowerCase();
-              if (val.includes("debar") || val.includes("defaulter") || val.includes("not elig") || val === "fail" || val === "d") {
-                isDebarred = true;
-              } else if (!isNaN(parseFloat(val)) && parseFloat(val) < 75.0 && parseFloat(val) > 0) {
-                isDebarred = true;
+            // Exclude rows where booked students is 0 or negative
+            if (bookedNum <= 0) return;
+
+            // Debarred check (if file contains attendance / debarment data)
+            if (debarCol && row[debarCol]) {
+              const debVal = String(row[debarCol]).trim().toLowerCase();
+              if (debVal.includes("debar") || debVal.includes("defaulter") || debVal.includes("not elig") || debVal === "fail" || debVal === "d") {
+                debarredCount++;
+                if (debarredList.length < 150) {
+                  debarredList.push({
+                    id: String(studentIdCol ? row[studentIdCol] : `Row ${debarredList.length + 1}`),
+                    details: String(row[debarCol])
+                  });
+                }
               }
             }
 
-            if (isDebarred) {
-              debarredCount++;
-              if (debarredList.length < 150) {
-                debarredList.push({
-                  id: studentId || `Row ${debarredList.length + 1}`,
-                  details: debKey ? String(row[debKey]) : "Debarred (<75% Attendance)"
-                });
+            const rawProgAbbrev = progAbbrevCol ? String(row[progAbbrevCol] || "").trim() : (context?.program ? context.program.split(" - ")[0] : "General");
+            const rawProgName = progNameCol ? String(row[progNameCol] || "").trim() : rawProgAbbrev;
+            if (!rawProgAbbrev) return;
+
+            const rawSession = sessionCol ? String(row[sessionCol] || "").trim() : (context?.semester || "Sem I");
+            const semester = normalizeSemester(rawSession);
+
+            const cohortKey = `${rawProgAbbrev}__${semester}`;
+            if (!cohortsMap[cohortKey]) {
+              let fullProgString = `${rawProgAbbrev} - ${rawProgName}`;
+              const configProgs = config?.programs?.[detectedCollege] || [];
+              const found = configProgs.find(p => p.startsWith(rawProgAbbrev + " -") || p.startsWith(rawProgAbbrev) || (rawProgName && p.toLowerCase().includes(rawProgName.toLowerCase())));
+              if (found) fullProgString = found;
+
+              cohortsMap[cohortKey] = {
+                programCode: rawProgAbbrev,
+                programName: rawProgName || rawProgAbbrev,
+                fullProgramString,
+                collegeId: detectedCollege,
+                semester: semester,
+                modulesMap: new Map(),
+                maxBooked: 0
+              };
+            }
+
+            const cohort = cohortsMap[cohortKey];
+
+            // Module identification
+            const modAbbrev = modAbbrevCol ? String(row[modAbbrevCol] || "").trim() : "";
+            const modDesc = modDescCol ? String(row[modDescCol] || "").trim() : modAbbrev;
+            if (!modAbbrev) return;
+
+            globalModuleSet.add(modAbbrev);
+
+            // Clean scales: strip "S0" prefix
+            const scale1 = scale1Col ? stripS0(row[scale1Col]) : "";
+            const scale2 = scale2Col ? stripS0(row[scale2Col]) : "";
+
+            // Exam type determination: WRIT / LAB / ICA
+            const rawExamMode = examModeCol ? String(row[examModeCol] || "").trim().toUpperCase() : "";
+            const rawNue = onlyNueCol ? String(row[onlyNueCol] || "").trim().toUpperCase() : "";
+            const rawOnlyIca = onlyIcaCol ? String(row[onlyIcaCol] || "").trim().toUpperCase() : "";
+
+            let examType = "WRIT";
+            if (rawNue === "ONLY ICA" || rawNue === "Y" || rawOnlyIca === "YES") {
+              examType = "ICA";
+            } else if (rawExamMode.includes("LAB") || rawExamMode.includes("PRAC")) {
+              examType = "LAB";
+            } else if (rawExamMode.includes("ICA")) {
+              examType = "ICA";
+            } else if (rawExamMode.includes("WRIT")) {
+              examType = "WRIT";
+            } else {
+              examType = "WRIT";
+            }
+
+            const creditVal = creditCol ? String(row[creditCol] || "").trim() : "";
+            const durationVal = durationCol ? String(row[durationCol] || "").trim() : "";
+
+            if (!cohort.modulesMap.has(modAbbrev)) {
+              cohort.modulesMap.set(modAbbrev, {
+                code: modAbbrev,
+                name: modDesc || modAbbrev,
+                examType,
+                examMode: examType,
+                rawExamMode,
+                appraisal1Scale: scale1,
+                appraisal2Scale: scale2,
+                credit: creditVal,
+                duration: durationVal,
+                bookedStudents: bookedNum
+              });
+            } else {
+              const existing = cohort.modulesMap.get(modAbbrev);
+              if (bookedNum > existing.bookedStudents) {
+                existing.bookedStudents = bookedNum;
               }
+              if (!existing.appraisal1Scale && scale1) existing.appraisal1Scale = scale1;
+              if (!existing.appraisal2Scale && scale2) existing.appraisal2Scale = scale2;
+            }
+
+            if (bookedNum > cohort.maxBooked) {
+              cohort.maxBooked = bookedNum;
             }
           });
 
-          const totalEligible = Math.max(0, (studentSet.size || rawJson.length) - debarredCount);
-          const distinctModulesCount = detectedModules.size;
+          // Build cohortsList
+          const cohortsList = Object.values(cohortsMap).map(cohort => {
+            const modulesList = Array.from(cohort.modulesMap.values()).sort((a, b) => a.code.localeCompare(b.code));
+            const writCount = modulesList.filter(m => m.examType === "WRIT").length;
+            const labCount = modulesList.filter(m => m.examType === "LAB").length;
+            const icaCount = modulesList.filter(m => m.examType === "ICA").length;
+            const totalModules = modulesList.length;
+
+            totalWritAcrossFile += writCount;
+            totalLabAcrossFile += labCount;
+            totalIcaAcrossFile += icaCount;
+            totalBookedAcrossFile += cohort.maxBooked;
+
+            return {
+              programCode: cohort.programCode,
+              programName: cohort.programName,
+              fullProgramString: cohort.fullProgramString,
+              collegeId: cohort.collegeId,
+              semester: cohort.semester,
+              writCount,
+              labCount,
+              icaCount,
+              totalModules,
+              numModules: writCount, // Primary KPI number is WRIT (Theory)
+              modulesBreakdown: {
+                total: totalModules,
+                writ: writCount,
+                lab: labCount,
+                ica: icaCount
+              },
+              modulesList,
+              studentCount: cohort.maxBooked
+            };
+          }).sort((a, b) => {
+            if (a.programCode !== b.programCode) return a.programCode.localeCompare(b.programCode);
+            return a.semester.localeCompare(b.semester);
+          });
+
+          // Pre-select all cohorts by default
+          const initialSelection = {};
+          cohortsList.forEach(c => {
+            initialSelection[`${c.programCode}__${c.semester}`] = true;
+          });
+          setSelectedCohorts(initialSelection);
 
           setParsedData({
             type: "acad_report",
             fileName: file.name,
             totalRows: rawJson.length,
-            totalStudentsFound: studentSet.size || rawJson.length,
-            distinctModulesCount,
-            detectedModulesList: Array.from(detectedModules),
+            detectedCollege,
+            detectedAcademicYear: normalizedYear,
+            cohorts: cohortsList,
+            totalWritAcrossFile,
+            totalLabAcrossFile,
+            totalIcaAcrossFile,
+            totalBookedAcrossFile,
+            distinctModulesCount: globalModuleSet.size,
             debarredCount,
-            totalEligible,
             debarredSample: debarredList,
             availableCols
           });
@@ -415,18 +620,95 @@ export default function SapOsmExcelModal({
     }
   };
 
-  // 1-Click: Apply Acad Report metrics
-  const handleApplyAcadReportToActive = () => {
-    if (!onApplyMetrics || !parsedData) return;
+  // 1-Click: Apply specific Acad Report cohort to Active Session
+  const handleApplyAcadReportCohortToActive = (cohort) => {
+    if (!onApplyMetrics || !cohort) return;
+
+    if (setContext && (!isCohortActiveContext(cohort))) {
+      setContext(prev => ({
+        ...prev,
+        college: cohort.collegeId || prev.college,
+        program: cohort.fullProgramString || cohort.programName || prev.program,
+        semester: cohort.semester || prev.semester,
+        batch: parsedData?.detectedAcademicYear || prev.batch
+      }));
+    }
+
     onApplyMetrics({
       ...headerMetrics,
-      numModules: parsedData.distinctModulesCount || 0,
-      debarredStudents: parsedData.debarredCount || 0,
+      numModules: cohort.writCount, // Primary KPI on card is Total WRIT Theory
+      modulesBreakdown: cohort.modulesBreakdown,
+      modulesList: cohort.modulesList,
       isUploadedFromExcel: true,
       lastImportedFile: fileName || parsedData?.fileName
     });
+
     if (window.showPortalToast) {
-      window.showPortalToast(`Applied Acad Report: ${parsedData.distinctModulesCount} Active Modules & ${parsedData.debarredCount} Debarred Students!`, "success");
+      window.showPortalToast(`Applied Acad Report: ${cohort.writCount} Theory Papers (WRIT), ${cohort.totalModules} Total Modules for ${cohort.programCode} (${cohort.semester})!`, "success");
+    }
+  };
+
+  // 1-Click: Apply Acad Report metrics
+  const handleApplyAcadReportToActive = () => {
+    if (!onApplyMetrics || !parsedData) return;
+    if (activeContextCohort) {
+      handleApplyAcadReportCohortToActive(activeContextCohort);
+    } else if (parsedData.cohorts && parsedData.cohorts.length > 0) {
+      handleApplyAcadReportCohortToActive(parsedData.cohorts[0]);
+    } else {
+      onApplyMetrics({
+        ...headerMetrics,
+        numModules: parsedData.distinctModulesCount || 0,
+        debarredStudents: parsedData.debarredCount || 0,
+        isUploadedFromExcel: true,
+        lastImportedFile: fileName || parsedData?.fileName
+      });
+      if (window.showPortalToast) {
+        window.showPortalToast(`Applied Acad Report: ${parsedData.distinctModulesCount} Active Modules!`, "success");
+      }
+    }
+  };
+
+  // 1-Click: Batch Sync Acad Report Cohorts to Database
+  const handleBatchSyncAcadReportCohorts = async () => {
+    if (!parsedData?.cohorts || !onBatchUpdateMetrics) return;
+
+    const cohortsToSync = parsedData.cohorts.filter(c => 
+      importMode === "selective" ? !!selectedCohorts[`${c.programCode}__${c.semester}`] : true
+    );
+
+    if (cohortsToSync.length === 0) {
+      if (window.showPortalToast) window.showPortalToast("No cohorts selected for import.", "warning");
+      return;
+    }
+
+    setBatchSyncing(true);
+    try {
+      await onBatchUpdateMetrics({
+        college: parsedData.detectedCollege,
+        academicYear: parsedData.detectedAcademicYear,
+        cohorts: cohortsToSync.map(c => ({
+          programCode: c.programCode,
+          programName: c.fullProgramString || c.programName,
+          semester: c.semester,
+          numModules: c.writCount, // Primary is WRIT
+          modulesBreakdown: c.modulesBreakdown,
+          modulesList: c.modulesList,
+          studentCount: c.studentCount || 0
+        })),
+        mode: importMode,
+        fileName: fileName || parsedData.fileName
+      });
+      if (window.showPortalToast) {
+        window.showPortalToast(`Successfully synchronized ${cohortsToSync.length} cohorts to database!`, "success");
+      }
+    } catch (e) {
+      console.error(e);
+      if (window.showPortalToast) {
+        window.showPortalToast(e?.message ? `Sync error: ${e.message}` : "Failed to batch synchronize cohorts.", "error");
+      }
+    } finally {
+      setBatchSyncing(false);
     }
   };
 
@@ -1046,64 +1328,260 @@ export default function SapOsmExcelModal({
           {/* ==================================================== */}
           {parsedData?.type === "acad_report" && activeTab === "acad_report" && (
             <div className="space-y-4">
+              {/* Summary Metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
-                  <div className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-300">Active Modules / Papers</div>
+                  <div className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-300">Detected Cohorts</div>
                   <div className="text-xl font-extrabold text-indigo-950 dark:text-white mt-0.5">
-                    {parsedData.distinctModulesCount}
+                    {parsedData.cohorts?.length || 0}
                   </div>
-                  <div className="text-[10px] text-indigo-600 dark:text-indigo-400">Unique Subjects Detected</div>
+                  <div className="text-[10px] text-indigo-600 dark:text-indigo-400">
+                    {parsedData.detectedCollege} • {parsedData.detectedAcademicYear}
+                  </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
-                  <div className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-300">Debarred Students</div>
-                  <div className="text-xl font-extrabold text-rose-950 dark:text-white mt-0.5">
-                    {parsedData.debarredCount}
+                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+                  <div className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300">Written Theory (WRIT)</div>
+                  <div className="text-xl font-extrabold text-blue-950 dark:text-white mt-0.5">
+                    {parsedData.totalWritAcrossFile || 0}
                   </div>
-                  <div className="text-[10px] text-rose-600 dark:text-rose-400">&lt;75% Attendance Defaulters</div>
+                  <div className="text-[10px] text-blue-600 dark:text-blue-400">Core Written Exam Papers</div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                  <div className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-300">Practical &amp; ICA</div>
+                  <div className="text-xl font-extrabold text-amber-950 dark:text-white mt-0.5">
+                    {(parsedData.totalLabAcrossFile || 0)} L · {(parsedData.totalIcaAcrossFile || 0)} I
+                  </div>
+                  <div className="text-[10px] text-amber-600 dark:text-amber-400">Lab &amp; Internal Subjects</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                  <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-300">Eligible Students</div>
+                  <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-300">Total Booked Students</div>
                   <div className="text-xl font-extrabold text-emerald-950 dark:text-white mt-0.5">
-                    {parsedData.totalEligible.toLocaleString()}
+                    {(parsedData.totalBookedAcrossFile || 0).toLocaleString()}
                   </div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400">Total Enrolled - Debarred</div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col justify-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={handleApplyAcadReportToActive}
-                    className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition"
-                  >
-                    Apply ({importMode.toUpperCase()}) to Active
-                  </button>
-                  {parsedData.debarredCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowDebarredModal(true)}
-                      className="w-full py-1 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg border border-slate-200 dark:border-slate-600 transition"
-                    >
-                      View Debarred List ({parsedData.debarredCount})
-                    </button>
-                  )}
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                    Across {parsedData.distinctModulesCount || 0} unique modules
+                  </div>
                 </div>
               </div>
 
-              {/* Detected Modules List */}
-              {parsedData.detectedModulesList?.length > 0 && (
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Detected Course Papers / Modules ({parsedData.detectedModulesList.length}):
+              {/* Active Context Callout */}
+              {activeContextCohort ? (
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-emerald-700 dark:text-emerald-300 uppercase block">
+                      Active Context Match Detected
+                    </span>
+                    <span className="text-xs font-bold text-emerald-950 dark:text-emerald-100">
+                      {activeContextCohort.programName} • {activeContextCohort.semester} ({activeContextCohort.collegeId})
+                    </span>
+                    <span className="text-xs text-emerald-700 dark:text-emerald-300 ml-2">
+                      &rarr; <strong>{activeContextCohort.writCount}</strong> Theory Papers (WRIT), <strong>{activeContextCohort.labCount}</strong> LAB, <strong>{activeContextCohort.icaCount}</strong> ICA (Total: <strong>{activeContextCohort.totalModules}</strong>)
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {parsedData.detectedModulesList.map((m, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[11px] text-slate-700 dark:text-slate-300 font-medium">
-                        {m}
-                      </span>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewCohortSubjects(activeContextCohort)}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5"
+                    >
+                      <Icon name="layers" size={13} />
+                      <span>View Subjects ({activeContextCohort.totalModules})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyAcadReportCohortToActive(activeContextCohort)}
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5"
+                    >
+                      <Icon name="check" size={13} />
+                      <span>Apply to Active</span>
+                    </button>
                   </div>
+                </div>
+              ) : (
+                <div className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                  <span>Current context ({context?.college} • {context?.program} • {context?.semester}) not in this file. Select a cohort row below to apply.</span>
+                </div>
+              )}
+
+              {/* Cohorts Table Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                  <input
+                    type="text"
+                    value={cohortSearch}
+                    onChange={(e) => setCohortSearch(e.target.value)}
+                    placeholder="Search program code or name..."
+                    className="w-full max-w-xs px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <select
+                    value={selectedSemFilter}
+                    onChange={(e) => setSelectedSemFilter(e.target.value)}
+                    className="px-2 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="ALL">All Semesters</option>
+                    <option value="Sem I">Sem I</option>
+                    <option value="Sem II">Sem II</option>
+                    <option value="Sem III">Sem III</option>
+                    <option value="Sem IV">Sem IV</option>
+                    <option value="Sem V">Sem V</option>
+                    <option value="Sem VI">Sem VI</option>
+                    <option value="Sem VII">Sem VII</option>
+                    <option value="Sem VIII">Sem VIII</option>
+                  </select>
+                </div>
+
+                {/* Batch Sync to Supabase */}
+                {onBatchUpdateMetrics && (
+                  <button
+                    type="button"
+                    onClick={handleBatchSyncAcadReportCohorts}
+                    disabled={batchSyncing}
+                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5"
+                  >
+                    <Icon name="database" size={13} />
+                    <span>
+                      {batchSyncing ? "Syncing..." : `Sync Selected Cohorts (${importMode.toUpperCase()} Mode)`}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {/* Cohorts Table */}
+              <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-72 overflow-y-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-slate-50 dark:bg-slate-800/80 sticky top-0 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                      <th className="p-2 w-8 text-center">
+                        <input
+                          type="checkbox"
+                          checked={filteredCohorts.length > 0 && filteredCohorts.every(c => !!selectedCohorts[`${c.programCode}__${c.semester}`])}
+                          onChange={(e) => handleToggleSelectAll(e.target.checked)}
+                          className="rounded text-indigo-600"
+                          title="Select / Unselect all"
+                        />
+                      </th>
+                      <th className="p-2">Prog Code</th>
+                      <th className="p-2">Program Name</th>
+                      <th className="p-2 text-center">Semester</th>
+                      <th className="p-2 text-center">WRIT (Theory)</th>
+                      <th className="p-2 text-center">LAB</th>
+                      <th className="p-2 text-center">ICA</th>
+                      <th className="p-2 text-center">Total Modules</th>
+                      <th className="p-2 text-right">Booked Students</th>
+                      <th className="p-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredCohorts.map((c, i) => {
+                      const isMatch = isCohortActiveContext(c);
+                      const cohortKey = `${c.programCode}__${c.semester}`;
+                      const isSelected = !!selectedCohorts[cohortKey];
+
+                      return (
+                        <tr
+                          key={i}
+                          className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition ${isMatch ? 'bg-emerald-50/70 dark:bg-emerald-950/30 font-semibold' : ''}`}
+                        >
+                          <td className="p-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                setSelectedCohorts(prev => ({
+                                  ...prev,
+                                  [cohortKey]: e.target.checked
+                                }));
+                              }}
+                              className="rounded text-indigo-600"
+                            />
+                          </td>
+                          <td className="p-2 font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {c.programCode}
+                          </td>
+                          <td className="p-2 truncate max-w-xs text-slate-700 dark:text-slate-300" title={c.programName}>
+                            {c.programName}
+                          </td>
+                          <td className="p-2 text-center">
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                              {c.semester}
+                            </span>
+                          </td>
+                          <td className="p-2 text-center">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                              {c.writCount} WRIT
+                            </span>
+                          </td>
+                          <td className="p-2 text-center">
+                            {c.labCount > 0 ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                {c.labCount} LAB
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-[11px]">0</span>
+                            )}
+                          </td>
+                          <td className="p-2 text-center">
+                            {c.icaCount > 0 ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                {c.icaCount} ICA
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-[11px]">0</span>
+                            )}
+                          </td>
+                          <td className="p-2 text-center font-bold text-slate-800 dark:text-slate-200">
+                            {c.totalModules}
+                          </td>
+                          <td className="p-2 text-right font-mono font-medium text-slate-800 dark:text-slate-200">
+                            {c.studentCount?.toLocaleString() || 0}
+                          </td>
+                          <td className="p-2 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewCohortSubjects(c)}
+                                className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 transition"
+                                title="Inspect module subjects, scales & credits"
+                              >
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleApplyAcadReportCohortToActive(c)}
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                                  isMatch
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                                }`}
+                              >
+                                {isMatch ? "Active" : "Apply"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Debarred notification if defaulters found */}
+              {parsedData.debarredCount > 0 && (
+                <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-rose-800 dark:text-rose-200">
+                    <Icon name="alert-triangle" size={15} className="text-rose-600" />
+                    <span><strong>{parsedData.debarredCount}</strong> Attendance Defaulters (&lt;75%) detected in file.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDebarredModal(true)}
+                    className="px-2.5 py-1 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition"
+                  >
+                    View Debarred List
+                  </button>
                 </div>
               )}
             </div>
@@ -1363,6 +1841,25 @@ export default function SapOsmExcelModal({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Cohort Subject Preview Modal */}
+      {previewCohortSubjects && (
+        <SessionModulesModal
+          isOpen={!!previewCohortSubjects}
+          onClose={() => setPreviewCohortSubjects(null)}
+          context={{
+            college: previewCohortSubjects.collegeId || parsedData?.detectedCollege,
+            batch: parsedData?.detectedAcademicYear || context?.batch,
+            program: previewCohortSubjects.programName,
+            semester: previewCohortSubjects.semester
+          }}
+          headerMetrics={{
+            modulesList: previewCohortSubjects.modulesList,
+            modulesBreakdown: previewCohortSubjects.modulesBreakdown,
+            numModules: previewCohortSubjects.writCount
+          }}
+        />
       )}
 
     </div>

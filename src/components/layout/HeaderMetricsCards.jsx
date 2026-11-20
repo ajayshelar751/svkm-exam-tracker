@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Icon from '../common/Icon.jsx';
 import { formatExamMonthYear } from '../../utils/helpers.js';
+import SessionModulesModal from '../modals/SessionModulesModal.jsx';
 
 // --- Section A: Session Summary Cards (8-Card Responsive Grid) ---
 export default function HeaderMetricsCards({
@@ -10,6 +11,8 @@ export default function HeaderMetricsCards({
   currentLogs = {},
   onOpenSapOsmModal
 }) {
+  const [showModulesModal, setShowModulesModal] = useState(false);
+
   // Auto-derived Exam Month & Year from Exam Start Date
   const autoDerivedMonthYear = useMemo(() => {
     if (metrics.examStartDate) {
@@ -92,20 +95,37 @@ export default function HeaderMetricsCards({
           <div className="text-[10px] text-slate-400">Under this Session</div>
         </div>
 
-        {/* 4: MODULES (Non-editable, no sample count) */}
-        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        {/* 4: MODULES (Clickable with Subject List Viewer Modal) */}
+        <div
+          onClick={() => setShowModulesModal(true)}
+          className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group select-none"
+          title="Click to view full subjects list and marks scale breakdown"
+        >
           <div className="text-[10px] font-bold tracking-wider text-slate-500 uppercase flex items-center justify-between">
-            <span>MODULES</span>
-            <Icon name="layers" size={13} className="text-slate-400" />
+            <span className="group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">MODULES</span>
+            <Icon name="layers" size={13} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
           </div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-base font-bold text-slate-900 dark:text-white">
-              {(metrics.numModules !== undefined && metrics.numModules !== null && metrics.numModules > 0) ? metrics.numModules : "—"}
+              {(metrics.numModules !== undefined && metrics.numModules !== null && metrics.numModules > 0) ? metrics.numModules : (metrics.modulesBreakdown?.writ || "—")}
             </span>
-            {metrics.numModules > 0 && <span className="text-xs font-semibold text-slate-400">WRIT</span>}
+            {Boolean((metrics.numModules && metrics.numModules > 0) || metrics.modulesBreakdown?.writ) && (
+              <span className="text-xs font-semibold text-slate-400">WRIT</span>
+            )}
           </div>
           <div className="text-[10px] text-slate-400">
-            {metrics.numModules > 0 ? `${metrics.numModules} Active Papers` : "Pending Acad Report"}
+            {metrics.modulesBreakdown ? (
+              <span className="truncate block font-mono text-[9px] text-slate-500 dark:text-slate-400">
+                {metrics.modulesBreakdown.writ || 0}W · {metrics.modulesBreakdown.lab || 0}L · {metrics.modulesBreakdown.ica || 0}I
+              </span>
+            ) : metrics.numModules > 0 ? (
+              `${metrics.numModules} Active Papers`
+            ) : (
+              "Pending Acad Report"
+            )}
+          </div>
+          <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold group-hover:underline mt-0.5">
+            View Subjects ›
           </div>
         </div>
 
@@ -192,6 +212,14 @@ export default function HeaderMetricsCards({
         </div>
 
       </div>
+
+      {/* Session Modules & Subjects Directory Modal */}
+      <SessionModulesModal
+        isOpen={showModulesModal}
+        onClose={() => setShowModulesModal(false)}
+        context={context}
+        headerMetrics={metrics}
+      />
     </div>
   );
 }
