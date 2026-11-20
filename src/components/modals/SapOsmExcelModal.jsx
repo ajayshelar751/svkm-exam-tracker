@@ -350,14 +350,13 @@ export default function SapOsmExcelModal({
 
             const cohortKey = `${rawProgAbbrev}__${semester}`;
             if (!cohortsMap[cohortKey]) {
-              let fullProgramString = `${rawProgAbbrev} - ${rawProgName}`;
               const configProgs = config?.programs?.[detectedCollege] || [];
               const found = configProgs.find(p => p.startsWith(rawProgAbbrev + " -") || p.startsWith(rawProgAbbrev) || (rawProgName && p.toLowerCase().includes(rawProgName.toLowerCase())));
-              if (found) fullProgramString = found;
+              const fullProgramString = found || `${rawProgAbbrev} - ${rawProgName}`;
 
               cohortsMap[cohortKey] = {
                 programCode: rawProgAbbrev,
-                programName: rawProgName || rawProgAbbrev,
+                programName: found || rawProgName || rawProgAbbrev,
                 fullProgramString,
                 collegeId: detectedCollege,
                 semester: semester,
@@ -582,9 +581,10 @@ export default function SapOsmExcelModal({
     const progMatch = context.program && (
       context.program.startsWith(cohort.programCode + " -") ||
       context.program.startsWith(cohort.programCode) ||
-      context.program === cohort.programName
+      context.program === cohort.programName ||
+      context.program === cohort.fullProgramString
     );
-    return sameCol && sameSem && progMatch;
+    return sameCol && sameSem && Boolean(progMatch);
   };
 
   // 1-Click: Apply Cohort to Current Active Context
@@ -598,7 +598,7 @@ export default function SapOsmExcelModal({
     const targetCycle = context?.examCycle || "Regular";
     const targetKey = `${targetCollege}__${targetBatch}__${targetProg}__${targetSem}__${targetCycle}`;
 
-    if (setContext && (!isCohortActiveContext(cohort))) {
+    if (setContext) {
       setContext(prev => ({
         ...prev,
         college: targetCollege,
@@ -608,13 +608,14 @@ export default function SapOsmExcelModal({
       }));
     }
 
-    const currentTotal = headerMetrics?.totalStudents || 0;
+    const targetExisting = contexts?.[targetKey]?.headerMetrics || {};
+    const currentTotal = targetExisting.totalStudents || 0;
     const finalTotal = (importMode === "merge") ? (currentTotal + cohort.studentCount) : cohort.studentCount;
-    const currentPwd = headerMetrics?.pwdStudents || 0;
+    const currentPwd = targetExisting.pwdStudents || 0;
     const finalPwd = (importMode === "merge") ? (currentPwd + cohort.pwdCount) : cohort.pwdCount;
 
     onApplyMetrics({
-      ...headerMetrics,
+      ...targetExisting,
       totalStudents: finalTotal,
       pwdStudents: finalPwd,
       batch: targetBatch,
@@ -638,7 +639,7 @@ export default function SapOsmExcelModal({
     const targetCycle = context?.examCycle || "Regular";
     const targetKey = `${targetCollege}__${targetBatch}__${targetProg}__${targetSem}__${targetCycle}`;
 
-    if (setContext && (!isCohortActiveContext(cohort))) {
+    if (setContext) {
       setContext(prev => ({
         ...prev,
         college: targetCollege,
@@ -648,8 +649,10 @@ export default function SapOsmExcelModal({
       }));
     }
 
+    const targetExisting = contexts?.[targetKey]?.headerMetrics || {};
+
     onApplyMetrics({
-      ...headerMetrics,
+      ...targetExisting,
       numModules: cohort.writCount, // Primary KPI on card is Total WRIT Theory
       modulesBreakdown: cohort.modulesBreakdown,
       modulesList: cohort.modulesList,
@@ -670,13 +673,14 @@ export default function SapOsmExcelModal({
     } else if (parsedData.cohorts && parsedData.cohorts.length > 0) {
       handleApplyAcadReportCohortToActive(parsedData.cohorts[0]);
     } else {
+      const activeExisting = contexts?.[currentContextKey]?.headerMetrics || {};
       onApplyMetrics({
-        ...headerMetrics,
+        ...activeExisting,
         numModules: parsedData.distinctModulesCount || 0,
         debarredStudents: parsedData.debarredCount || 0,
         isUploadedFromExcel: true,
         lastImportedFile: fileName || parsedData?.fileName
-      });
+      }, currentContextKey);
       if (window.showPortalToast) {
         window.showPortalToast(`Applied Acad Report: ${parsedData.distinctModulesCount} Active Modules!`, "success");
       }
@@ -707,8 +711,7 @@ export default function SapOsmExcelModal({
           semester: c.semester,
           numModules: c.writCount, // Primary is WRIT
           modulesBreakdown: c.modulesBreakdown,
-          modulesList: c.modulesList,
-          studentCount: c.studentCount || 0
+          modulesList: c.modulesList
         })),
         mode: importMode,
         fileName: fileName || parsedData.fileName

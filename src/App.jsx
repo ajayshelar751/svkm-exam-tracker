@@ -594,23 +594,25 @@ export default function App() {
         lastImportedFile: fileName
       };
 
-      if (item.studentCount !== undefined) {
+      if (item.studentCount !== undefined && item.studentCount > 0) {
         if (mode === "merge") {
           updatedMetrics.totalStudents = (prevCtx.headerMetrics?.totalStudents || 0) + (item.studentCount || 0);
           updatedMetrics.pwdStudents = (prevCtx.headerMetrics?.pwdStudents || 0) + (item.pwdCount || 0);
         } else {
           updatedMetrics.totalStudents = item.studentCount || 0;
-          updatedMetrics.pwdStudents = item.pwdCount || 0;
+          if (item.pwdCount !== undefined) {
+            updatedMetrics.pwdStudents = item.pwdCount || 0;
+          }
         }
       }
 
-      if (item.numModules !== undefined) {
+      if (item.numModules !== undefined && item.numModules > 0) {
         updatedMetrics.numModules = item.numModules;
       }
       if (item.modulesBreakdown) {
         updatedMetrics.modulesBreakdown = item.modulesBreakdown;
       }
-      if (item.modulesList) {
+      if (item.modulesList && item.modulesList.length > 0) {
         updatedMetrics.modulesList = item.modulesList;
       }
 
@@ -894,10 +896,32 @@ export default function App() {
   // Update Header Metrics explicitly via saveHeaderMetricsToCloud
   const handleUpdateMetrics = (metrics, optContextKey) => {
     const targetKey = optContextKey || currentContextKey;
-    const targetCtx = contexts[targetKey] || currentContextData;
+    const targetCtx = contexts[targetKey] || currentContextData || { headerMetrics: {}, logs: {} };
+    const prevMetrics = targetCtx.headerMetrics || {};
+
+    const mergedMetrics = {
+      ...prevMetrics,
+      ...metrics,
+      totalStudents: (metrics.totalStudents !== undefined && metrics.totalStudents > 0)
+        ? metrics.totalStudents
+        : (prevMetrics.totalStudents || metrics.totalStudents || 0),
+      pwdStudents: (metrics.pwdStudents !== undefined && metrics.pwdStudents > 0)
+        ? metrics.pwdStudents
+        : (prevMetrics.pwdStudents || metrics.pwdStudents || 0),
+      numModules: (metrics.numModules !== undefined && metrics.numModules > 0)
+        ? metrics.numModules
+        : (prevMetrics.numModules || metrics.numModules || 0),
+      modulesBreakdown: metrics.modulesBreakdown || prevMetrics.modulesBreakdown || undefined,
+      modulesList: (Array.isArray(metrics.modulesList) && metrics.modulesList.length > 0)
+        ? metrics.modulesList
+        : (prevMetrics.modulesList || undefined),
+      batch: metrics.batch || prevMetrics.batch || targetKey.split('__')[1] || "",
+      isUploadedFromExcel: Boolean(metrics.isUploadedFromExcel || prevMetrics.isUploadedFromExcel || (metrics.totalStudents > 0) || (prevMetrics.totalStudents > 0) || (metrics.numModules > 0))
+    };
+
     const updated = {
       ...targetCtx,
-      headerMetrics: metrics
+      headerMetrics: mergedMetrics
     };
     setContexts(prev => {
       const nextContexts = {
@@ -908,7 +932,7 @@ export default function App() {
       return nextContexts;
     });
     if (dbRef.current) {
-      StorageService.saveHeaderMetricsToCloud(dbRef.current, targetKey, metrics)
+      StorageService.saveHeaderMetricsToCloud(dbRef.current, targetKey, mergedMetrics)
         .catch(err => {
           console.warn("Cloud write error:", err);
           setSyncError(true);

@@ -491,7 +491,7 @@ export class SupabaseService {
       try {
         const { data: dbSessions, error: sErr } = await client.from('exam_sessions').select(`
           id, context_key, exam_month_year,
-          dashboard_metrics(total_students, pwd_students, debarred_students, ufm_cases, num_modules, reg_batch_students, prev_batch_students, appearing_batches, num_programs, exam_month_year, batch_year),
+          dashboard_metrics(total_students, pwd_students, debarred_students, ufm_cases, num_modules, reg_batch_students, prev_batch_students, appearing_batches, num_programs, exam_month_year, batch_year, extra_metrics),
           activity_logs(
             id, activity_id, is_na, performed_date, performed_by_name, performed_by_email, performed_at, remarks, status,
             verification_logs(role_code, is_verified, is_revoked, verification_date, verified_at, verifier_name, verifier_email),
@@ -509,25 +509,45 @@ export class SupabaseService {
             if (PURGED_COLLEGES.has(colPrefix)) return;
             this.recordSessionMapping(sess.id, cKey);
             const dm = Array.isArray(sess.dashboard_metrics) ? sess.dashboard_metrics[0] : sess.dashboard_metrics;
+            const dmExtra = dm?.extra_metrics || {};
             const batchFromKey = cKey.split('__')[1] || '';
             const existingLocalMetrics = localData?.contexts?.[cKey]?.headerMetrics || {};
             const cloudCached = modulesCloudCache?.[cKey] || {};
+
+            // Intelligent Non-Zero Merging: never let empty or unpopulated zero values overwrite valid imported counts
+            const totalStudents = Math.max(Number(dm?.total_students || 0), Number(existingLocalMetrics.totalStudents || 0));
+            const pwdStudents = Math.max(Number(dm?.pwd_students || 0), Number(existingLocalMetrics.pwdStudents || 0));
+            const numModules = Math.max(Number(dm?.num_modules || 0), Number(existingLocalMetrics.numModules || 0));
+            const debarredStudents = Math.max(Number(dm?.debarred_students || 0), Number(existingLocalMetrics.debarredStudents || 0));
+            const ufmCases = Math.max(Number(dm?.ufm_cases || 0), Number(existingLocalMetrics.ufmCases || 0));
+
+            // Module lists retrieval priority: Database extra_metrics -> Local Storage -> Cloud Cache
+            const modulesList = (Array.isArray(dmExtra.modulesList) && dmExtra.modulesList.length > 0)
+              ? dmExtra.modulesList
+              : (Array.isArray(existingLocalMetrics.modulesList) && existingLocalMetrics.modulesList.length > 0)
+              ? existingLocalMetrics.modulesList
+              : (Array.isArray(cloudCached.modulesList) && cloudCached.modulesList.length > 0)
+              ? cloudCached.modulesList
+              : undefined;
+
+            const modulesBreakdown = dmExtra.modulesBreakdown || existingLocalMetrics.modulesBreakdown || cloudCached.modulesBreakdown || undefined;
+
             const headerMetrics = {
               ...existingLocalMetrics,
               batch: (dm && dm.batch_year) || existingLocalMetrics.batch || batchFromKey,
-              totalStudents: dm ? (dm.total_students || 0) : (existingLocalMetrics.totalStudents || 0),
-              pwdStudents: dm ? (dm.pwd_students || 0) : (existingLocalMetrics.pwdStudents || 0),
-              debarredStudents: dm ? (dm.debarred_students || 0) : (existingLocalMetrics.debarredStudents || 0),
-              ufmCases: dm ? (dm.ufm_cases || 0) : (existingLocalMetrics.ufmCases || 0),
-              numModules: dm ? (dm.num_modules || 0) : (existingLocalMetrics.numModules || 0),
-              regBatchStudents: dm ? (dm.reg_batch_students || 0) : (existingLocalMetrics.regBatchStudents || 0),
-              prevBatchStudents: dm ? (dm.prev_batch_students || 0) : (existingLocalMetrics.prevBatchStudents || 0),
-              appearingBatches: dm ? (dm.appearing_batches || "") : (existingLocalMetrics.appearingBatches || ""),
-              numPrograms: dm ? (dm.num_programs || 1) : (existingLocalMetrics.numPrograms || 1),
+              totalStudents,
+              pwdStudents,
+              debarredStudents,
+              ufmCases,
+              numModules,
+              regBatchStudents: dm?.reg_batch_students || existingLocalMetrics.regBatchStudents || 0,
+              prevBatchStudents: dm?.prev_batch_students || existingLocalMetrics.prevBatchStudents || 0,
+              appearingBatches: dm?.appearing_batches || existingLocalMetrics.appearingBatches || "",
+              numPrograms: dm?.num_programs || existingLocalMetrics.numPrograms || 1,
               examMonthYear: (dm && dm.exam_month_year) || sess.exam_month_year || existingLocalMetrics.examMonthYear || "",
-              isUploadedFromExcel: dm ? ((dm.total_students || 0) > 0) : (existingLocalMetrics.isUploadedFromExcel || false),
-              modulesList: existingLocalMetrics.modulesList || cloudCached.modulesList || undefined,
-              modulesBreakdown: existingLocalMetrics.modulesBreakdown || cloudCached.modulesBreakdown || undefined
+              isUploadedFromExcel: totalStudents > 0 || numModules > 0 || Boolean(existingLocalMetrics.isUploadedFromExcel),
+              modulesList,
+              modulesBreakdown
             };
 
             const logs = {};
@@ -781,19 +801,47 @@ export class SupabaseService {
       const sessionId = await this.ensureSession(client, contextKey);
       if (!sessionId) return;
 
+      // Intelligent protection: never overwrite existing positive student count with 0, and never overwrite existing positive modules count with 0
+      const { data: existingDm } = await client.from('dashboard_metrics')
+        .select('*')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      const totalStudents = (headerMetrics.totalStudents !== undefined && headerMetrics.totalStudents > 0)
+        ? headerMetrics.totalStudents
+        : (existingDm?.total_students || headerMetrics.totalStudents || 0);
+
+      const pwdStudents = (headerMetrics.pwdStudents !== undefined && headerMetrics.pwdStudents > 0)
+        ? headerMetrics.pwdStudents
+        : (existingDm?.pwd_students || headerMetrics.pwdStudents || 0);
+
+      const numModules = (headerMetrics.numModules !== undefined && headerMetrics.numModules > 0)
+        ? headerMetrics.numModules
+        : (existingDm?.num_modules || headerMetrics.numModules || 0);
+
+      const existingExtra = existingDm?.extra_metrics || {};
+      const updatedExtra = {
+        ...existingExtra,
+        modulesList: (Array.isArray(headerMetrics.modulesList) && headerMetrics.modulesList.length > 0) ? headerMetrics.modulesList : (existingExtra.modulesList || undefined),
+        modulesBreakdown: headerMetrics.modulesBreakdown || existingExtra.modulesBreakdown || undefined,
+        lastImportedFile: headerMetrics.lastImportedFile || existingExtra.lastImportedFile || undefined,
+        updatedAt: new Date().toISOString()
+      };
+
       await client.from('dashboard_metrics').upsert({
         session_id: sessionId,
-        total_students: headerMetrics.totalStudents || 0,
-        pwd_students: headerMetrics.pwdStudents || 0,
-        debarred_students: headerMetrics.debarredStudents || 0,
-        ufm_cases: headerMetrics.ufmCases || 0,
-        num_modules: headerMetrics.numModules || 0,
-        reg_batch_students: headerMetrics.regBatchStudents || 0,
-        prev_batch_students: headerMetrics.prevBatchStudents || 0,
-        appearing_batches: headerMetrics.appearingBatches || '',
-        num_programs: headerMetrics.numPrograms || 1,
-        exam_month_year: headerMetrics.examMonthYear || '',
-        batch_year: headerMetrics.batch || ''
+        total_students: totalStudents,
+        pwd_students: pwdStudents,
+        debarred_students: headerMetrics.debarredStudents || existingDm?.debarred_students || 0,
+        ufm_cases: headerMetrics.ufmCases || existingDm?.ufm_cases || 0,
+        num_modules: numModules,
+        reg_batch_students: headerMetrics.regBatchStudents || existingDm?.reg_batch_students || 0,
+        prev_batch_students: headerMetrics.prevBatchStudents || existingDm?.prev_batch_students || 0,
+        appearing_batches: headerMetrics.appearingBatches || existingDm?.appearing_batches || '',
+        num_programs: headerMetrics.numPrograms || existingDm?.num_programs || 1,
+        exam_month_year: headerMetrics.examMonthYear || existingDm?.exam_month_year || '',
+        batch_year: headerMetrics.batch || existingDm?.batch_year || '',
+        extra_metrics: updatedExtra
       }, { onConflict: 'session_id' });
 
       if (headerMetrics.examMonthYear) {
@@ -1214,18 +1262,39 @@ export class SupabaseService {
                 if (!row || !row.session_id) return;
                 console.log(`%c[Realtime:EventReceived] dashboard_metrics (${payload.eventType}): Session ${row.session_id}`, 'color: #3b82f6; font-weight: bold;');
 
-                const headerMetrics = {
-                  batch: row.batch_year || '',
-                  totalStudents: row.total_students || 0,
-                  pwdStudents: row.pwd_students || 0,
-                  debarredStudents: row.debarred_students || 0,
-                  ufmCases: row.ufm_cases || 0,
-                  numModules: row.num_modules || 0,
-                  regBatchStudents: row.reg_batch_students || 0,
-                  prevBatchStudents: row.prev_batch_students || 0,
-                  appearingBatches: row.appearing_batches || '',
-                  numPrograms: row.num_programs || 1,
-                  examMonthYear: row.exam_month_year || ''
+                const mergeWithExisting = (prevMetrics = {}) => {
+                  const extra = row.extra_metrics || {};
+                  const totalStudents = (row.total_students !== undefined && row.total_students > 0)
+                    ? row.total_students
+                    : (prevMetrics.totalStudents || 0);
+                  const pwdStudents = (row.pwd_students !== undefined && row.pwd_students > 0)
+                    ? row.pwd_students
+                    : (prevMetrics.pwdStudents || 0);
+                  const numModules = (row.num_modules !== undefined && row.num_modules > 0)
+                    ? row.num_modules
+                    : (prevMetrics.numModules || 0);
+                  const modulesList = (Array.isArray(extra.modulesList) && extra.modulesList.length > 0)
+                    ? extra.modulesList
+                    : (prevMetrics.modulesList || undefined);
+                  const modulesBreakdown = extra.modulesBreakdown || prevMetrics.modulesBreakdown || undefined;
+
+                  return {
+                    ...prevMetrics,
+                    batch: row.batch_year || prevMetrics.batch || '',
+                    totalStudents,
+                    pwdStudents,
+                    debarredStudents: row.debarred_students || prevMetrics.debarredStudents || 0,
+                    ufmCases: row.ufm_cases || prevMetrics.ufmCases || 0,
+                    numModules,
+                    regBatchStudents: row.reg_batch_students || prevMetrics.regBatchStudents || 0,
+                    prevBatchStudents: row.prev_batch_students || prevMetrics.prevBatchStudents || 0,
+                    appearingBatches: row.appearing_batches || prevMetrics.appearingBatches || '',
+                    numPrograms: row.num_programs || prevMetrics.numPrograms || 1,
+                    examMonthYear: row.exam_month_year || prevMetrics.examMonthYear || '',
+                    isUploadedFromExcel: totalStudents > 0 || numModules > 0 || Boolean(prevMetrics.isUploadedFromExcel),
+                    modulesList,
+                    modulesBreakdown
+                  };
                 };
 
                 const syncKey = SupabaseService.getContextKeyForSession(row.session_id);
@@ -1236,10 +1305,7 @@ export class SupabaseService {
                       ...contexts,
                       [syncKey]: {
                         ...ctx,
-                        headerMetrics: {
-                          ...(ctx.headerMetrics || {}),
-                          ...headerMetrics
-                        }
+                        headerMetrics: mergeWithExisting(ctx.headerMetrics)
                       }
                     };
                   });
@@ -1252,10 +1318,7 @@ export class SupabaseService {
                         ...contexts,
                         [resolvedKey]: {
                           ...ctx,
-                          headerMetrics: {
-                            ...(ctx.headerMetrics || {}),
-                            ...headerMetrics
-                          }
+                          headerMetrics: mergeWithExisting(ctx.headerMetrics)
                         }
                       };
                     });
