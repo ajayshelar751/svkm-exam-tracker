@@ -96,7 +96,13 @@ export default function AuditReportModal({
             {isReExam && (
               <div><strong>Appearing Batches:</strong> {headerMetrics.appearingBatches || "Current + Prior Batches"}</div>
             )}
-            <div><strong>Exam Month &amp; Year:</strong> {headerMetrics.examMonthYear || (isReExam ? (formatExamMonthYear(currentLogs["act_135"]?.performedDate) || formatExamMonthYear(currentLogs["act_23"]?.performedDate)) : (formatExamMonthYear(currentLogs["act_23"]?.performedDate) || formatExamMonthYear(currentLogs["act_135"]?.performedDate))) || "N/A"}</div>
+            <div><strong>Exam Month &amp; Year:</strong> {headerMetrics.examMonthYear || formatExamMonthYear(headerMetrics.examStartDate) || (isReExam ? (formatExamMonthYear(currentLogs["act_135"]?.performedDate) || formatExamMonthYear(currentLogs["act_23"]?.performedDate)) : (formatExamMonthYear(currentLogs["act_23"]?.performedDate) || formatExamMonthYear(currentLogs["act_135"]?.performedDate))) || "N/A"}</div>
+            {headerMetrics.examStartDate && (
+              <div><strong>Exam Start Date:</strong> {headerMetrics.examStartDate}</div>
+            )}
+            {headerMetrics.examEndDate && (
+              <div><strong>Exam End Date:</strong> {headerMetrics.examEndDate}</div>
+            )}
             <div><strong>Program / Course:</strong> {context.program}</div>
             <div><strong>Semester &amp; Cycle:</strong> {context.semester} • {context.examCycle} Examination</div>
             <div><strong>Audit Inspection Date:</strong> {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</div>

@@ -28,9 +28,12 @@ export function exportCurrentViewExcel(activities, currentLogs, context, headerM
 
   // Session Summary Metrics
   rows.push(["SESSION METADATA SUMMARY"]);
+  const derivedMonth = headerMetrics.examMonthYear || formatExamMonthYear(headerMetrics.examStartDate) || (context.examCycle === "Re-Exam" ? (formatExamMonthYear(currentLogs["act_135"]?.performedDate || currentLogs["act_23"]?.performedDate)) : (formatExamMonthYear(currentLogs["act_23"]?.performedDate || currentLogs["act_135"]?.performedDate))) || "N/A";
   if (context.examCycle === "Re-Exam") {
     rows.push([
-      "Exam Month & Year", headerMetrics.examMonthYear || formatExamMonthYear(currentLogs["act_135"]?.performedDate || currentLogs["act_23"]?.performedDate) || "N/A",
+      "Exam Month & Year", derivedMonth,
+      "Exam Start Date", headerMetrics.examStartDate || "N/A",
+      "Exam End Date", headerMetrics.examEndDate || "N/A",
       "Total Appearing Students", headerMetrics.totalStudents || 0,
       "Regular Batch Students", headerMetrics.regBatchStudents || 0,
       "Prev. Year / Backlog Students", headerMetrics.prevBatchStudents || 0,
@@ -42,7 +45,9 @@ export function exportCurrentViewExcel(activities, currentLogs, context, headerM
     ]);
   } else {
     rows.push([
-      "Exam Month & Year", headerMetrics.examMonthYear || formatExamMonthYear(currentLogs["act_23"]?.performedDate || currentLogs["act_135"]?.performedDate) || "N/A",
+      "Exam Month & Year", derivedMonth,
+      "Exam Start Date", headerMetrics.examStartDate || "N/A",
+      "Exam End Date", headerMetrics.examEndDate || "N/A",
       "Total Students", headerMetrics.totalStudents || 0,
       "PWD Students", headerMetrics.pwdStudents || 0,
       "Debarred Students", headerMetrics.debarredStudents || 0,

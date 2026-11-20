@@ -218,31 +218,31 @@ export default function AdminPanel({
               </div>
 
               {/* Batch Scope Selector */}
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Batch:</span>
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm">
+                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Batch:</span>
                 <select
                   value={staffBatchFilter}
                   onChange={(e) => setStaffBatchFilter(e.target.value)}
-                  className="text-xs bg-transparent text-slate-900 dark:text-white font-medium border-0 focus:ring-0 cursor-pointer pr-1"
+                  className="text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold border-0 focus:ring-1 focus:ring-indigo-500 rounded cursor-pointer pr-1"
                 >
-                  <option value="ALL">All Batches</option>
+                  <option value="ALL" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All Batches</option>
                   {(config.batches || []).map(b => (
-                    <option key={b} value={b}>{b}</option>
+                    <option key={b} value={b} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">{b}</option>
                   ))}
                 </select>
               </div>
 
               {/* Exam Cycle Selector */}
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cycle:</span>
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm">
+                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Cycle:</span>
                 <select
                   value={staffCycleFilter}
                   onChange={(e) => setStaffCycleFilter(e.target.value)}
-                  className="text-xs bg-transparent text-slate-900 dark:text-white font-medium border-0 focus:ring-0 cursor-pointer pr-1"
+                  className="text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold border-0 focus:ring-1 focus:ring-indigo-500 rounded cursor-pointer pr-1"
                 >
-                  <option value="ALL">All Cycles</option>
-                  <option value="Regular">Regular Only</option>
-                  <option value="Re-Exam">Re-Exam Only</option>
+                  <option value="ALL" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All Cycles</option>
+                  <option value="Regular" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Regular Only</option>
+                  <option value="Re-Exam" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Re-Exam Only</option>
                 </select>
               </div>
             </div>

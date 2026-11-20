@@ -389,26 +389,6 @@ export default function ActivityTrackerView({
 
   return (
     <div className="max-w-[1700px] mx-auto px-4 py-3 space-y-3 pb-24">
-
-      {/* 0-Student Lockout Banner */}
-      {isZeroStudents && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-600 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm text-amber-900 dark:text-amber-200">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400">
-            <Icon name="alert-triangle" size={24} />
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-sm flex items-center gap-2">
-              <span>Session Inactive: Student Count is 0</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 uppercase tracking-wide">
-                Activities Locked
-              </span>
-            </div>
-            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">
-              No students are registered for this cohort ({context.college} • {context.program} • {context.semester} • {context.examCycle}). All activity tracker phases, date entries, verifications, and queries are locked until student records are imported.
-            </p>
-          </div>
-        </div>
-      )}
       
       {/* Filters & KPI Bar */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs no-print">

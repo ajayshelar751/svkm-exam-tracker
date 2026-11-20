@@ -43,11 +43,17 @@ import {
 import { hashPassword, verifyPassword } from './utils/crypto.js';
 import { SupabaseService, StorageService } from './services/supabaseService.js';
 
+const REMOVED_DATE_ACT_IDS = new Set(["act_23", "act_24", "act_135", "act_136"]);
+const sanitizeActivities = (acts) => {
+  if (!Array.isArray(acts)) return acts;
+  return acts.filter(a => !REMOVED_DATE_ACT_IDS.has(a?.id) && !["Regular Exam Start Date", "Re-Exam Start Date", "Regular Exam End Date", "Re-Exam End Date"].includes(a?.name));
+};
+
 // --- Root App Component ---
 export default function App() {
-  // Theme
+  // Theme - Defaults to Dark Mode for all users
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('svkm_theme') || 'light';
+    return localStorage.getItem('svkm_theme') || 'dark';
   });
 
   useEffect(() => {
@@ -181,8 +187,8 @@ export default function App() {
         setUsers(initialUsers);
       }
       if (local.activities) {
-        initialActivities = local.activities;
-        setActivities(local.activities);
+        initialActivities = sanitizeActivities(local.activities);
+        setActivities(initialActivities);
       }
       if (local.contexts) {
         // Sanitize local contexts: retain only active NMC/UPG uploaded sessions
@@ -220,7 +226,7 @@ export default function App() {
           const cleanUsers = res.data.users.filter(u => u.email?.toLowerCase().endsWith('@svkm.ac.in'));
           setUsers(cleanUsers.length > 0 ? cleanUsers : initialUsers);
         }
-        if (res.data.activities) setActivities(res.data.activities);
+        if (res.data.activities) setActivities(sanitizeActivities(res.data.activities));
         if (res.data.contexts) {
           // Pure Supabase Excel uploaded contexts
           setContexts(res.data.contexts);
@@ -264,10 +270,11 @@ export default function App() {
         },
         onActivitiesUpdate: (actList) => {
           if (actList && actList.length > 0) {
-            setActivities(actList);
+            const clean = sanitizeActivities(actList);
+            setActivities(clean);
             setCloudStatus("CONNECTED");
             setLastSyncTime(new Date());
-            SupabaseService.debouncedSaveLocalData({ activities: actList });
+            SupabaseService.debouncedSaveLocalData({ activities: clean });
           }
         },
         onContextsUpdate: (patchOrFn) => {
@@ -297,7 +304,7 @@ export default function App() {
           if (syncRes.success && syncRes.data) {
             if (syncRes.data.config) setConfig(c => ({ ...syncRes.data.config, examCycles: normalizeExamCycles(syncRes.data.config.examCycles) }));
             if (syncRes.data.users) setUsers(syncRes.data.users);
-            if (syncRes.data.activities) setActivities(syncRes.data.activities);
+            if (syncRes.data.activities) setActivities(sanitizeActivities(syncRes.data.activities));
             if (syncRes.data.contexts) setContexts(syncRes.data.contexts);
             setCloudStatus("CONNECTED");
             setLastSyncTime(new Date());
@@ -1445,7 +1452,7 @@ export default function App() {
             if (res.success && res.data) {
               if (res.data.config) setConfig(res.data.config);
               if (res.data.users) setUsers(res.data.users);
-              if (res.data.activities) setActivities(res.data.activities);
+              if (res.data.activities) setActivities(sanitizeActivities(res.data.activities));
               if (res.data.contexts) setContexts(res.data.contexts);
               setCloudStatus("CONNECTED");
               setLastSyncTime(new Date());
@@ -1468,6 +1475,9 @@ export default function App() {
             config={config}
             context={context}
             setContext={setContext}
+            contexts={contexts}
+            headerMetrics={currentHeaderMetrics}
+            onUpdateMetrics={handleUpdateMetrics}
           />
         )}
       </header>

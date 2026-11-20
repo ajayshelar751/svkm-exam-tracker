@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Icon from '../common/Icon.jsx';
 import { computeUserActionableItems, getTodayYYYYMMDD } from '../../utils/helpers.js';
 
@@ -14,6 +14,11 @@ export default function MyActionQueueView({
   onOpenQueryModal
 }) {
   const [queueFilter, setQueueFilter] = useState("ALL");
+  const [collegeFilter, setCollegeFilter] = useState("ALL");
+  const [batchFilter, setBatchFilter] = useState(() => config?.currentBatch || "ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pageSize, setPageSize] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedQueueIds, setSelectedQueueIds] = useState([]);
 
   // Merge active context so brand new sessions immediately show tasks
@@ -32,12 +37,75 @@ export default function MyActionQueueView({
     return computeUserActionableItems(activities, mergedContexts, config, currentUser);
   }, [activities, mergedContexts, config, currentUser]);
 
+  // Distinct colleges and batches in actionable items for scoped filtering
+  const availableColleges = useMemo(() => {
+    const set = new Set();
+    actionableItems.forEach(i => {
+      if (i.college) set.add(i.college);
+    });
+    return Array.from(set).sort();
+  }, [actionableItems]);
+
+  const availableBatches = useMemo(() => {
+    const set = new Set();
+    actionableItems.forEach(i => {
+      if (i.batch) set.add(i.batch);
+    });
+    return Array.from(set).sort().reverse();
+  }, [actionableItems]);
+
+  // Filter items based on active criteria
   const filteredItems = useMemo(() => {
-    if (queueFilter === "PERFORM") return actionableItems.filter(i => i.actionType === "PERFORM");
-    if (queueFilter === "VERIFY") return actionableItems.filter(i => i.actionType === "VERIFY");
-    if (queueFilter === "QUERY") return actionableItems.filter(i => i.actionType === "QUERY_RESOLVE");
-    return actionableItems;
-  }, [actionableItems, queueFilter]);
+    return actionableItems.filter(item => {
+      if (queueFilter === "PERFORM" && item.actionType !== "PERFORM") return false;
+      if (queueFilter === "VERIFY" && item.actionType !== "VERIFY") return false;
+      if (queueFilter === "QUERY" && item.actionType !== "QUERY_RESOLVE") return false;
+
+      if (collegeFilter !== "ALL" && item.college !== collegeFilter) return false;
+      if (batchFilter !== "ALL" && item.batch !== batchFilter) return false;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const matchName = item.activity?.name?.toLowerCase().includes(q);
+        const matchPhase = item.activity?.phase?.toLowerCase().includes(q);
+        const matchProg = item.program?.toLowerCase().includes(q);
+        const matchCol = item.college?.toLowerCase().includes(q);
+        const matchSem = item.semester?.toLowerCase().includes(q);
+        if (!matchName && !matchPhase && !matchProg && !matchCol && !matchSem) return false;
+      }
+
+      return true;
+    });
+  }, [actionableItems, queueFilter, collegeFilter, batchFilter, searchQuery]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [queueFilter, collegeFilter, batchFilter, searchQuery, pageSize]);
+
+  // Pagination bounds
+  const totalItems = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+  // Paginated slice: Only renders rows for the current page, ensuring instant speed
+  const paginatedItems = useMemo(() => {
+    return filteredItems.slice(startIndex, endIndex);
+  }, [filteredItems, startIndex, endIndex]);
+
+  const isAllPageSelected = paginatedItems.length > 0 && paginatedItems.every(i => selectedQueueIds.includes(i.id));
+
+  const toggleSelectPage = () => {
+    if (isAllPageSelected) {
+      const pageIds = new Set(paginatedItems.map(i => i.id));
+      setSelectedQueueIds(prev => prev.filter(id => !pageIds.has(id)));
+    } else {
+      const newIds = new Set([...selectedQueueIds, ...paginatedItems.map(i => i.id)]);
+      setSelectedQueueIds(Array.from(newIds));
+    }
+  };
 
   const handleBulkQueueVerify = () => {
     const today = getTodayYYYYMMDD();
@@ -81,7 +149,7 @@ export default function MyActionQueueView({
           </p>
         </div>
 
-        {/* Filter Pills */}
+        {/* Action Type Filter Pills */}
         <div className="flex items-center gap-2 text-xs bg-slate-900/40 p-1.5 rounded-xl border border-indigo-700/50">
           <button
             onClick={() => setQueueFilter("ALL")}
@@ -118,6 +186,113 @@ export default function MyActionQueueView({
         </div>
       </div>
 
+      {/* Scoped Controls & Pagination Toolbar */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Quick Search */}
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search activity, program, sem..."
+              className="w-56 pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+              <Icon name="search" size={13} />
+            </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <Icon name="x" size={12} />
+              </button>
+            )}
+          </div>
+
+          {/* College Filter */}
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span className="font-bold text-slate-500 uppercase text-[10px]">College:</span>
+            <select
+              value={collegeFilter}
+              onChange={(e) => setCollegeFilter(e.target.value)}
+              className="bg-transparent font-semibold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+            >
+              <option value="ALL" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All Colleges ({availableColleges.length})</option>
+              {availableColleges.map(c => (
+                <option key={c} value={c} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Batch Filter */}
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span className="font-bold text-slate-500 uppercase text-[10px]">Batch:</span>
+            <select
+              value={batchFilter}
+              onChange={(e) => setBatchFilter(e.target.value)}
+              className="bg-transparent font-semibold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+            >
+              <option value="ALL" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All Batches</option>
+              {availableBatches.map(b => (
+                <option key={b} value={b} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">{b}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span className="font-bold text-slate-500 uppercase text-[10px]">Show:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="bg-transparent font-semibold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+            >
+              <option value={25} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">25 per page</option>
+              <option value={50} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">50 per page</option>
+              <option value={100} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">100 per page</option>
+              <option value={250} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">250 per page</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Matched Count & Pagination Controls */}
+        <div className="flex items-center gap-3">
+          <span className="text-slate-500 text-[11px]">
+            {totalItems === 0 ? "0 items" : (
+              <>
+                Showing <strong className="text-slate-900 dark:text-white">{startIndex + 1}–{endIndex}</strong> of <strong className="text-slate-900 dark:text-white">{totalItems}</strong>
+              </>
+            )}
+          </span>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition font-semibold"
+                title="Previous Page"
+              >
+                ‹ Prev
+              </button>
+              <span className="px-2 py-1 text-slate-600 dark:text-slate-300 font-bold font-mono">
+                {safePage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition font-semibold"
+                title="Next Page"
+              >
+                Next ›
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Queue List Table */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         {filteredItems.length === 0 ? (
@@ -126,7 +301,7 @@ export default function MyActionQueueView({
               <Icon name="check-circle" size={32} />
             </div>
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">All caught up!</h3>
-            <p className="text-xs">No pending activities or verifications currently awaiting your action.</p>
+            <p className="text-xs">No pending activities match your active filters.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -136,12 +311,10 @@ export default function MyActionQueueView({
                   <th className="py-3 px-3 w-8 text-center">
                     <input
                       type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedQueueIds(filteredItems.map(i => i.id));
-                        else setSelectedQueueIds([]);
-                      }}
-                      checked={selectedQueueIds.length > 0 && selectedQueueIds.length === filteredItems.length}
+                      onChange={toggleSelectPage}
+                      checked={isAllPageSelected}
                       className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      title="Select / deselect all on this page"
                     />
                   </th>
                   <th className="py-3 px-3">Context (College • Program • Sem)</th>
@@ -151,7 +324,7 @@ export default function MyActionQueueView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {filteredItems.map(item => {
+                {paginatedItems.map(item => {
                   const isSelected = selectedQueueIds.includes(item.id);
                   const isQuery = item.actionType === "QUERY_RESOLVE";
 
@@ -248,6 +421,31 @@ export default function MyActionQueueView({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Bottom Pagination Footer */}
+        {totalPages > 1 && filteredItems.length > 0 && (
+          <div className="py-3 px-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+            <div>
+              Page <strong className="text-slate-900 dark:text-white">{safePage}</strong> of <strong className="text-slate-900 dark:text-white">{totalPages}</strong> ({totalItems} total actions)
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition font-semibold"
+              >
+                ‹ Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition font-semibold"
+              >
+                Next ›
+              </button>
+            </div>
           </div>
         )}
       </div>

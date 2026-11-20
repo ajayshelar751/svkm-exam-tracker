@@ -12,6 +12,9 @@ export default function HeaderMetricsCards({
 }) {
   // Auto-derived Exam Month & Year from Exam Start Date
   const autoDerivedMonthYear = useMemo(() => {
+    if (metrics.examStartDate) {
+      return formatExamMonthYear(metrics.examStartDate);
+    }
     const isReExam = context?.examCycle === "Re-Exam";
     let targetDate = "";
     if (isReExam) {
@@ -20,7 +23,7 @@ export default function HeaderMetricsCards({
       targetDate = currentLogs?.["act_23"]?.performedDate || currentLogs?.["act_135"]?.performedDate || "";
     }
     return formatExamMonthYear(targetDate);
-  }, [context?.examCycle, currentLogs]);
+  }, [metrics.examStartDate, context?.examCycle, currentLogs]);
 
   const displayMonthYear = metrics.examMonthYear ?? autoDerivedMonthYear ?? "";
   const isAutoSynced = autoDerivedMonthYear && (metrics.examMonthYear === autoDerivedMonthYear || !metrics.examMonthYear);

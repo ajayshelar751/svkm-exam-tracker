@@ -104,7 +104,7 @@ export default function ExecutiveDashboardView({
       });
 
       const progressPct = applicableCount > 0 ? Math.round((completedCount / applicableCount) * 100) : 0;
-      const autoMonth = formatExamMonthYear(logs["act_135"]?.performedDate || logs["act_23"]?.performedDate);
+      const autoMonth = formatExamMonthYear(m.examStartDate || logs["act_135"]?.performedDate || logs["act_23"]?.performedDate);
       const examMonthYear = m.examMonthYear || autoMonth || "";
 
       list.push({

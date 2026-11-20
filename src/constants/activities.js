@@ -212,36 +212,6 @@ export const INITIAL_ACTIVITIES = [
     ]
   },
   {
-    "srNo": 23,
-    "name": "Regular Exam Start Date",
-    "phase": "Phase 1: Academic & SAP Setup",
-    "performedBy": "ASST",
-    "cond": "ALL",
-    "id": "act_23",
-    "requiredVerifiers": [
-      "ASST_COORD",
-      "COORD",
-      "AR",
-      "DY_COE",
-      "COE"
-    ]
-  },
-  {
-    "srNo": 24,
-    "name": "Regular Exam End Date",
-    "phase": "Phase 1: Academic & SAP Setup",
-    "performedBy": "ASST",
-    "cond": "ALL",
-    "id": "act_24",
-    "requiredVerifiers": [
-      "ASST_COORD",
-      "COORD",
-      "AR",
-      "DY_COE",
-      "COE"
-    ]
-  },
-  {
     "srNo": 25,
     "name": "Exam Timing (From - to)",
     "phase": "Phase 1: Academic & SAP Setup",
@@ -1796,36 +1766,6 @@ export const INITIAL_ACTIVITIES = [
     "cond": "ALL",
     "id": "act_134",
     "requiredVerifiers": [
-      "AR",
-      "DY_COE",
-      "COE"
-    ]
-  },
-  {
-    "srNo": 135,
-    "name": "Re-Exam Start Date",
-    "phase": "Phase 6: Re-Exam & Re-Exam GR",
-    "performedBy": "ASST",
-    "cond": "ALL",
-    "id": "act_135",
-    "requiredVerifiers": [
-      "ASST_COORD",
-      "COORD",
-      "AR",
-      "DY_COE",
-      "COE"
-    ]
-  },
-  {
-    "srNo": 136,
-    "name": "Re-Exam End Date",
-    "phase": "Phase 6: Re-Exam & Re-Exam GR",
-    "performedBy": "ASST",
-    "cond": "ALL",
-    "id": "act_136",
-    "requiredVerifiers": [
-      "ASST_COORD",
-      "COORD",
       "AR",
       "DY_COE",
       "COE"
